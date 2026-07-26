@@ -234,6 +234,36 @@ python main.py analyze \
 pytest
 ```
 
+## Apify Collection Provider
+
+Apify is an additional preferred collection layer for Lovable Rescue Watch and
+the staged Global-to-Malaysia Opportunity Dig. Existing XHS and direct adapters
+remain available. The token is read only from `APIFY_API_TOKEN`; status and
+reports show only whether it is configured.
+
+Actor IDs are environment-configurable because Actor ownership and schemas can
+change. Before testing an Actor, complete its name, developer, input/output
+schemas, timestamp field, cost estimate, limitations, and purpose-specific input
+templates in `config/apify_actors.yaml`. A small test must pass schema, absolute
+timestamp, freshness, and cost checks before that exact Actor ID is approved.
+
+```bash
+python main.py apify status
+python main.py apify test --source reddit
+python main.py blockers plan --provider apify
+python main.py blockers run --platform lovable --provider apify --recent-hours 24
+python main.py opportunities plan --provider apify
+```
+
+Do not run `opportunities run` until the Reddit Actor test passes. The command
+also enforces this gate. Collection failures are reported as `NOT_RESEARCHED`,
+not as negative market evidence. Blocker reports never post replies or send
+private messages.
+
+The local `.env` file is gitignored. Apify raw results are redacted and stored at
+`data/raw/apify/<source>/<YYYY-MM-DD>/<actor_run_id>.json`. Workflow outputs are
+written to `data/reports/`.
+
 ## United States Demand Research
 
 Check adapters and credential/manual-import status:

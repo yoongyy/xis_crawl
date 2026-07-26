@@ -554,5 +554,7 @@ def _safe(value: str) -> str:
 # functions exist. The research group callback preserves the prior
 # `research --industry insurance ...` invocation.
 from .us_cli import register_us_cli
+from .apify_cli import register_apify_cli
 
 register_us_cli(app, insurance_research)
+register_apify_cli(app)

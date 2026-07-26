@@ -1,0 +1,201 @@
+defaults:
+  api_base_url: https://api.apify.com/v2
+  test_maximum_records: 3
+  test_timeout_seconds: 180
+  test_freshness_hours: 168
+  blocker_timeout_seconds: 900
+  opportunity_timeout_seconds: 1800
+  max_test_cost_usd: 0.10
+  max_actor_run_cost_usd: 0.50
+  max_workflow_cost_usd: 5.00
+
+# Actor IDs are read from the named environment variables. Metadata and exact
+# input templates must be completed for the chosen Actor before `apify test`
+# can approve it. This prevents silently switching to an untested Actor whose
+# schema happens to be different.
+sources:
+  reddit:
+    actor_id_env: APIFY_REDDIT_ACTOR_ID
+    actor_id:
+    actor_name: Reddit Scraper | Enterprise Grade
+    developer: Fatih Tahta
+    last_successful_test:
+    expected_input_schema:
+      type: object
+      properties:
+        queries: {type: array}
+        subredditName: {type: string}
+        subredditSort: {type: string, enum: [relevance, hot, top, new, comments]}
+        subredditTimeframe: {type: string, enum: [all, year, month, week, day, hour]}
+        scrapeComments: {type: boolean}
+        maxComments: {type: integer, minimum: 1}
+        maxPosts: {type: integer, minimum: 1}
+    expected_output_schema:
+      required_fields: [source_id, canonical_url, published_at]
+      field_map:
+        source_type: kind
+        source_id: id
+        canonical_url: [canonical_url, url]
+        title: title
+        text: body
+        author_public_name: author
+        published_at: created_utc
+        country: subreddit
+        engagement: score
+        comment_count: num_comments
+        query: query
+    timestamp_field: created_utc
+    cost_estimate_usd: 0.075
+    known_limitations:
+      - Community-maintained Actor; approval is tied to the exact Actor ID and tested schema.
+      - Current Free-tier price is approximately USD 0.00149 per dataset item.
+      - Blocker collection does not request comments because this Actor cannot condition comment fetching on the local prefilter score within one Actor run.
+      - Reddit and the Actor may omit post body text for link posts.
+    approval_status: unconfigured
+    input_templates:
+      test:
+        subredditName: lovable
+        subredditSort: new
+        subredditTimeframe: week
+        scrapeComments: false
+        maxPosts: "{{maximum_records}}"
+        includeNsfw: false
+        maximize_coverage: false
+      blockers:
+        subredditName: lovable
+        subredditSort: new
+        subredditTimeframe: week
+        scrapeComments: false
+        maxPosts: "{{maximum_records}}"
+        includeNsfw: false
+        maximize_coverage: false
+      discovery:
+        queries: "{{queries}}"
+        sort: new
+        timeframe: year
+        scrapeComments: false
+        maxPosts: 50
+        includeNsfw: false
+        maximize_coverage: false
+      deep_comments:
+        queries: "{{queries}}"
+        sort: relevance
+        timeframe: year
+        scrapeComments: true
+        maxComments: 60
+        maxPosts: 5
+        includeNsfw: false
+        maximize_coverage: false
+
+  youtube:
+    actor_id_env: APIFY_YOUTUBE_ACTOR_ID
+    actor_id:
+    actor_name:
+    developer:
+    last_successful_test:
+    expected_input_schema: {}
+    expected_output_schema: {}
+    timestamp_field: publishedAt
+    cost_estimate_usd:
+    known_limitations: []
+    approval_status: unconfigured
+    input_templates: {test: null, discovery: null}
+
+  youtube_comments:
+    actor_id_env: APIFY_YOUTUBE_COMMENTS_ACTOR_ID
+    actor_id:
+    actor_name:
+    developer:
+    last_successful_test:
+    expected_input_schema: {}
+    expected_output_schema: {}
+    timestamp_field: publishedAt
+    cost_estimate_usd:
+    known_limitations: []
+    approval_status: unconfigured
+    input_templates: {test: null, deep_comments: null}
+
+  tiktok:
+    actor_id_env: APIFY_TIKTOK_ACTOR_ID
+    actor_id:
+    actor_name:
+    developer:
+    last_successful_test:
+    expected_input_schema: {}
+    expected_output_schema: {}
+    timestamp_field: createTime
+    cost_estimate_usd:
+    known_limitations: []
+    approval_status: unconfigured
+    input_templates: {test: null, discovery: null}
+
+  tiktok_comments:
+    actor_id_env: APIFY_TIKTOK_COMMENTS_ACTOR_ID
+    actor_id:
+    actor_name:
+    developer:
+    last_successful_test:
+    expected_input_schema: {}
+    expected_output_schema: {}
+    timestamp_field: createTime
+    cost_estimate_usd:
+    known_limitations: []
+    approval_status: unconfigured
+    input_templates: {test: null, deep_comments: null}
+
+  facebook:
+    actor_id_env: APIFY_FACEBOOK_ACTOR_ID
+    actor_id:
+    actor_name:
+    developer:
+    last_successful_test:
+    expected_input_schema: {}
+    expected_output_schema: {}
+    timestamp_field: publishedAt
+    cost_estimate_usd:
+    known_limitations: []
+    approval_status: unconfigured
+    input_templates: {test: null, discovery: null}
+
+  app_store:
+    actor_id_env: APIFY_APPSTORE_ACTOR_ID
+    actor_id:
+    actor_name:
+    developer:
+    last_successful_test:
+    expected_input_schema: {}
+    expected_output_schema: {}
+    timestamp_field: date
+    cost_estimate_usd:
+    known_limitations: []
+    approval_status: unconfigured
+    input_templates: {test: null, discovery: null, reviews: null}
+
+  google_play:
+    actor_id_env: APIFY_GOOGLEPLAY_ACTOR_ID
+    actor_id:
+    actor_name:
+    developer:
+    last_successful_test:
+    expected_input_schema: {}
+    expected_output_schema: {}
+    timestamp_field: at
+    cost_estimate_usd:
+    known_limitations: []
+    approval_status: unconfigured
+    input_templates: {test: null, discovery: null, reviews: null}
+
+  google_trends:
+    actor_id_env: APIFY_TRENDS_ACTOR_ID
+    actor_id:
+    actor_name:
+    developer:
+    last_successful_test:
+    expected_input_schema: {}
+    expected_output_schema: {}
+    timestamp_field: date
+    cost_estimate_usd:
+    known_limitations:
+      - Search interest is supporting attention evidence, never payment evidence.
+    approval_status: unconfigured
+    input_templates: {test: null, discovery: null, trends: null}
