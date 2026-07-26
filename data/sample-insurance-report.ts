@@ -1,194 +1,439 @@
-export type IntentLevel = "High" | "Medium" | "Low";
-export type TrendDirection = "Growing" | "Stable" | "Shrinking";
+export type OpportunityLevel = "low" | "medium" | "high" | "very_high";
+export type EvidenceLabel =
+  | "Observed discussion theme"
+  | "Commercial opportunity"
+  | "Needs professional care";
 
-export interface DemoOpportunity {
+export interface InsuranceOpportunity {
   id: string;
+  isDemo: boolean;
   title: string;
-  excerpt: string;
-  category: string;
+  opportunityType: string;
+  quote: string;
   location: string;
-  intent: IntentLevel;
+  product: string;
+  insurer?: string;
+  postedAt: string;
+  level: OpportunityLevel;
   confidence: number;
-  posted: string;
-  signal: string;
+  whyItMatters: string;
+  publicContext: string;
   knownFacts: string[];
   unknownFacts: string[];
+  riskNotes: string[];
   suggestedResponse: string;
-  warnings: string[];
+  responseWarnings: string[];
+  sourceUrl?: string;
 }
 
-export interface Theme {
+export interface ExecutiveTheme {
+  title: string;
+  description: string;
+  evidence: EvidenceLabel;
+}
+
+export interface ConcernTrend {
   name: string;
   mentions: number;
-  share: number;
-  direction: TrendDirection;
-  change: string;
-  summary: string;
+}
+
+export interface MentionTheme {
+  name: string;
+  mentions: number;
+  note: string;
 }
 
 export const reportMeta = {
   title: "Malaysia Insurance Customer Voice Report",
-  edition: "Sample edition · Demo data",
-  period: "Illustrative 7-day window",
+  subtitle:
+    "What Malaysian customers are asking, complaining about, comparing, and considering right now.",
+  edition: "July 2026 sample",
+  dateRange: "Illustrative 7-day window",
+  updatedAt: "Updated 26 July 2026",
   conversations: 126,
   highIntent: 18,
   leadingProduct: "Medical card",
   fastestGrowing: "Premium increase",
 };
 
-export const themes: Theme[] = [
-  { name: "Premium increases", mentions: 34, share: 27, direction: "Growing", change: "+9 pts", summary: "People question renewal jumps and ask whether to reduce benefits or compare alternatives." },
-  { name: "Medical card limits", mentions: 26, share: 21, direction: "Growing", change: "+5 pts", summary: "Questions focus on annual limits, room rates, exclusions, and co-insurance." },
-  { name: "Claims clarity", mentions: 20, share: 16, direction: "Stable", change: "+1 pt", summary: "Customers want clearer documentation, timelines, and reasons for partial approvals." },
-  { name: "Agent responsiveness", mentions: 16, share: 13, direction: "Shrinking", change: "-4 pts", summary: "Service complaints remain visible but form a smaller share of this demo period." },
-  { name: "Family protection", mentions: 15, share: 12, direction: "Growing", change: "+3 pts", summary: "Young families seek simple coverage comparisons that fit a fixed monthly budget." },
-  { name: "Policy cancellation", mentions: 15, share: 12, direction: "Stable", change: "0 pts", summary: "People ask about surrender value, waiting periods, and replacement-policy risks." },
-];
-
-export const insurerMentions = [
-  { name: "AIA", mentions: 24, positive: 9, neutral: 8, negative: 7 },
-  { name: "Prudential", mentions: 22, positive: 7, neutral: 8, negative: 7 },
-  { name: "Great Eastern", mentions: 17, positive: 7, neutral: 6, negative: 4 },
-  { name: "Allianz", mentions: 15, positive: 6, neutral: 6, negative: 3 },
-  { name: "Etiqa", mentions: 12, positive: 5, neutral: 5, negative: 2 },
-];
-
-export const productThemes = [
-  { name: "Medical cards", mentions: 39, signal: "Comparisons and limit questions" },
-  { name: "Life protection", mentions: 25, signal: "Affordability and family needs" },
-  { name: "Critical illness", mentions: 19, signal: "Coverage scope questions" },
-  { name: "Motor insurance", mentions: 16, signal: "Renewal price comparisons" },
-  { name: "Takaful", mentions: 14, signal: "Shariah-compliant alternatives" },
-];
-
-export const opportunities: DemoOpportunity[] = [
+export const executiveThemes: ExecutiveTheme[] = [
   {
-    id: "medical-card-budget",
-    title: "Looking for a medical card below RM250 monthly",
-    excerpt: "A young parent is comparing plans and wants a clear explanation of annual limits and room coverage.",
-    category: "Medical card",
+    title: "Premium increases",
+    description:
+      "Customers are concerned about rising medical-card premiums, affordability, co-insurance, deductibles, and whether switching will affect existing coverage.",
+    evidence: "Observed discussion theme",
+  },
+  {
+    title: "Policy comparison",
+    description:
+      "People are asking how to compare annual limits, exclusions, waiting periods, investment-linked policies, and takaful alternatives.",
+    evidence: "Commercial opportunity",
+  },
+  {
+    title: "Agent trust and service",
+    description:
+      "Customers mention agents who do not reply, poor explanations, hard selling, and uncertainty about who to contact after an agent leaves.",
+    evidence: "Commercial opportunity",
+  },
+  {
+    title: "Claims and hospital admission",
+    description:
+      "People seek help understanding rejected claims, guarantee-letter delays, exclusions, missing documents, and appeal options.",
+    evidence: "Needs professional care",
+  },
+];
+export const concernTrends: ConcernTrend[] = [
+  { name: "Premium increase", mentions: 34 },
+  { name: "Medical-card comparison", mentions: 27 },
+  { name: "Claim assistance", mentions: 21 },
+  { name: "Looking for agent", mentions: 18 },
+  { name: "Parents' coverage", mentions: 14 },
+  { name: "Switching consideration", mentions: 12 },
+  { name: "Agent-service complaint", mentions: 9 },
+];
+
+export const insurerMentions: MentionTheme[] = [
+  { name: "Great Eastern", mentions: 22, note: "Questions, comparisons, complaints and neutral mentions" },
+  { name: "AIA", mentions: 20, note: "Questions, comparisons, complaints and neutral mentions" },
+  { name: "Prudential", mentions: 18, note: "Questions, comparisons, complaints and neutral mentions" },
+  { name: "Allianz", mentions: 14, note: "Questions, comparisons, complaints and neutral mentions" },
+  { name: "Etiqa", mentions: 12, note: "Questions, comparisons, complaints and neutral mentions" },
+  { name: "PruBSN", mentions: 10, note: "Questions, comparisons, complaints and neutral mentions" },
+  { name: "Zurich", mentions: 8, note: "Questions, comparisons, complaints and neutral mentions" },
+  { name: "Takaful Malaysia", mentions: 7, note: "Questions, comparisons, complaints and neutral mentions" },
+];
+
+export const productThemes: MentionTheme[] = [
+  { name: "Medical card", mentions: 39, note: "Limits, premiums and hospital coverage" },
+  { name: "Life insurance", mentions: 24, note: "Family protection and affordability" },
+  { name: "Critical illness", mentions: 19, note: "Lump-sum coverage and exclusions" },
+  { name: "Parents' medical coverage", mentions: 17, note: "Age eligibility and monthly budget" },
+  { name: "Child insurance", mentions: 14, note: "Newborn and family planning questions" },
+  { name: "Takaful", mentions: 13, note: "Shariah-compliant alternatives" },
+  { name: "Investment-linked policy", mentions: 11, note: "Sustainability and policy charges" },
+  { name: "Group medical insurance", mentions: 8, note: "SME budget and employee coverage" },
+];
+
+const sharedWarnings = [
+  "I guarantee I can give you a cheaper policy.",
+  "Cancel your current policy immediately.",
+  "Your current insurer is cheating you.",
+  "Your claim will definitely be approved.",
+];
+
+export const opportunities: InsuranceOpportunity[] = [
+  {
+    id: "parents-medical-card",
+    isDemo: true,
+    title: "Parents' medical-card request",
+    opportunityType: "Active purchase request",
+    quote:
+      "Looking for a medical card for my parents, both above 60. Any recommendation around RM400 each per month?",
     location: "Selangor",
-    intent: "High",
-    confidence: 92,
-    posted: "2 hours ago",
-    signal: "Budget + comparison request",
-    knownFacts: ["Monthly budget below RM250", "Wants medical-card comparisons", "Asks about annual and room limits"],
-    unknownFacts: ["Age and underwriting profile", "Existing coverage", "Preferred insurer or takaful requirement"],
-    suggestedResponse: "Offer a short, neutral comparison framework covering annual limit, room rate, co-insurance, waiting periods, and exclusions. Ask permission before discussing personal circumstances privately.",
-    warnings: ["Do not promise approval or claim outcomes", "Do not request medical details in a public reply"],
+    product: "Parents' medical insurance",
+    postedAt: "2 hours ago",
+    level: "very_high",
+    confidence: 96,
+    whyItMatters:
+      "The customer stated the target users, product requirement, location, and budget.",
+    publicContext:
+      "A public recommendation request from an adult child researching medical coverage for both parents.",
+    knownFacts: [
+      "Coverage is for two parents above age 60",
+      "Target budget is around RM400 each per month",
+      "The user is asking for recommendations",
+    ],
+    unknownFacts: [
+      "Parents' health and underwriting history",
+      "Existing medical coverage",
+      "Required annual limit, room rate, and deductible preference",
+    ],
+    riskNotes: [
+      "Eligibility and price depend on underwriting and product terms",
+      "Do not request medical details in a public reply",
+    ],
+    suggestedResponse:
+      "For parents above 60, it helps to compare entry-age eligibility, annual limits, room rate, co-insurance or deductibles, exclusions, and renewal terms before focusing on premium alone. I am an insurance agent and can share a neutral checklist of questions to ask each provider if useful.",
+    responseWarnings: sharedWarnings,
+    sourceUrl: "#demo-source",
   },
   {
-    id: "premium-jump",
-    title: "Renewal premium increased sharply this year",
-    excerpt: "The poster wants to understand whether repricing is normal and what can be adjusted without losing essential protection.",
-    category: "Policy review",
+    id: "trusted-agent-request",
+    isDemo: true,
+    title: "Insurance-agent recommendation request",
+    opportunityType: "Looking for agent",
+    quote:
+      "Any reliable insurance agent who can explain medical cards properly? I don't want someone who only pushes me to sign.",
     location: "Kuala Lumpur",
-    intent: "High",
-    confidence: 89,
-    posted: "4 hours ago",
-    signal: "Switching risk + cost pain",
-    knownFacts: ["Renewal cost increased", "Customer is considering alternatives", "Wants to retain core protection"],
-    unknownFacts: ["Policy type and rider structure", "Increase amount", "Current benefits and exclusions"],
-    suggestedResponse: "Explain that repricing can have several causes and offer to compare adjustment paths such as room rate, deductible, or rider structure using the policy documents.",
-    warnings: ["Do not recommend cancellation before replacement is active", "State that actual options depend on policy terms"],
+    product: "Medical card",
+    postedAt: "4 hours ago",
+    level: "high",
+    confidence: 94,
+    whyItMatters:
+      "The user is explicitly asking for a trustworthy agent and values explanation over hard selling.",
+    publicContext:
+      "A public request for an agent who can explain medical-card trade-offs without using pressure tactics.",
+    knownFacts: [
+      "The user wants medical-card guidance",
+      "Trust and explanation quality are important",
+      "The user is open to an agent recommendation",
+    ],
+    unknownFacts: [
+      "Coverage needs and budget",
+      "Existing policies",
+      "Preferred insurer or takaful requirement",
+    ],
+    riskNotes: [
+      "Lead with education rather than a product pitch",
+      "Do not claim to be more trustworthy than another agent without evidence",
+    ],
+    suggestedResponse:
+      "A useful comparison should cover annual limits, room rate, co-insurance, waiting periods, exclusions, and how premiums may change over time. I am an insurance agent and can share a plain-language checklist first, with no obligation to choose a plan.",
+    responseWarnings: sharedWarnings,
+    sourceUrl: "#demo-source",
   },
   {
-    id: "claim-documents",
-    title: "Unsure which documents are needed for a claim",
-    excerpt: "A customer is asking for a practical checklist after receiving conflicting instructions.",
-    category: "Claims support",
+    id: "considering-switch",
+    isDemo: true,
+    title: "Considering-switch request",
+    opportunityType: "Considering switch",
+    quote:
+      "My medical-card premium increased again. I am thinking of changing, but I'm worried about waiting periods and exclusions.",
     location: "Penang",
-    intent: "Medium",
-    confidence: 82,
-    posted: "Yesterday",
-    signal: "Service recovery opportunity",
-    knownFacts: ["Claim process has started", "Instructions were unclear", "Customer wants a checklist"],
-    unknownFacts: ["Claim category", "Insurer requirements", "Submission deadline"],
-    suggestedResponse: "Share a general checklist and direct the customer to the insurer's official claim guide. Offer help interpreting the checklist without asking for documents publicly.",
-    warnings: ["Never request identity or medical documents in public", "Use the insurer's current official requirements"],
+    product: "Medical card",
+    postedAt: "6 hours ago",
+    level: "high",
+    confidence: 93,
+    whyItMatters:
+      "There is clear dissatisfaction and comparison intent, but continuity risks must be explained carefully.",
+    publicContext:
+      "A policyholder is considering alternatives after another renewal increase and is concerned about replacement-policy risks.",
+    knownFacts: [
+      "The current medical-card premium increased",
+      "The customer is considering changing plans",
+      "Waiting periods and exclusions are explicit concerns",
+    ],
+    unknownFacts: [
+      "Current policy benefits and exclusions",
+      "Health and underwriting status",
+      "Whether adjusting the current policy is possible",
+    ],
+    riskNotes: [
+      "Replacing coverage can affect continuity and existing-condition treatment",
+      "The current policy should not be cancelled before suitable replacement coverage is confirmed",
+    ],
+    suggestedResponse:
+      "Sorry to hear about the increase. Before changing plans, it may help to compare the new premium, annual limit, deductible, exclusions, waiting periods, and whether changing affects existing-condition coverage. I'm an insurance agent and can share a neutral comparison checklist if that would be useful.",
+    responseWarnings: sharedWarnings,
+    sourceUrl: "#demo-source",
   },
   {
-    id: "newborn-cover",
-    title: "Comparing protection options for a newborn",
-    excerpt: "New parents want a simple explanation of medical and life protection priorities.",
-    category: "Family protection",
+    id: "claim-appeal",
+    isDemo: true,
+    title: "Claim appeal guidance",
+    opportunityType: "Claim assistance request",
+    quote:
+      "My hospital claim was rejected because they said it was pre-existing. What documents should I prepare if I want to appeal?",
     location: "Johor",
-    intent: "High",
+    product: "Health insurance",
+    postedAt: "Yesterday",
+    level: "medium",
     confidence: 88,
-    posted: "Yesterday",
-    signal: "Life event + active research",
-    knownFacts: ["Newborn coverage is the priority", "Parents are comparing options", "Needs plain-language guidance"],
-    unknownFacts: ["Budget", "Existing family coverage", "Eligibility and underwriting details"],
-    suggestedResponse: "Provide an educational sequence: immediate medical needs, parent protection, affordability, and policy conditions. Invite them to set a budget before comparing products.",
-    warnings: ["Avoid urgency tactics", "Explain waiting periods and underwriting clearly"],
+    whyItMatters:
+      "This person needs guidance, but the agent must not promise claim approval or use the situation for aggressive selling.",
+    publicContext:
+      "A public request for process guidance after a hospital claim was declined.",
+    knownFacts: [
+      "The hospital claim was rejected",
+      "The stated reason relates to a pre-existing condition",
+      "The customer wants to understand the appeal process",
+    ],
+    unknownFacts: [
+      "Policy wording and disclosure history",
+      "Insurer's formal rejection letter",
+      "Appeal deadline and required evidence",
+    ],
+    riskNotes: [
+      "Claims guidance must follow the insurer's official process",
+      "No approval outcome should be implied",
+    ],
+    suggestedResponse:
+      "You may want to start with the written rejection reason, policy wording, medical reports requested by the insurer, admission records, and any original disclosure documents. The insurer's official appeal channel should confirm the exact checklist. Avoid sharing medical documents publicly.",
+    responseWarnings: sharedWarnings,
+    sourceUrl: "#demo-source",
   },
   {
-    id: "agent-unresponsive",
-    title: "Current agent is no longer responding",
-    excerpt: "The policyholder needs servicing help and is asking how to change the servicing agent.",
-    category: "Agent service",
-    location: "Perak",
-    intent: "Medium",
-    confidence: 84,
-    posted: "2 days ago",
-    signal: "Provider switching signal",
-    knownFacts: ["Existing policy needs servicing", "Current agent is unresponsive", "Customer asks about reassignment"],
-    unknownFacts: ["Insurer", "Service request", "Whether the agent is still active"],
-    suggestedResponse: "Point to the insurer's official servicing channels and explain that agent reassignment processes differ. Offer general guidance without criticizing the current representative.",
-    warnings: ["Do not solicit confidential policy numbers publicly", "Avoid unverified claims about another agent"],
+    id: "provider-comparison",
+    isDemo: true,
+    title: "Medical-card provider comparison",
+    opportunityType: "Provider comparison",
+    quote:
+      "AIA, Great Eastern and Prudential medical cards - which points should I compare besides the premium?",
+    location: "Malaysia",
+    product: "Medical card",
+    insurer: "AIA, Great Eastern, Prudential",
+    postedAt: "Yesterday",
+    level: "high",
+    confidence: 91,
+    whyItMatters:
+      "The customer is actively evaluating alternatives and asking for decision criteria.",
+    publicContext:
+      "A public comparison request naming three insurers and asking for a decision framework.",
+    knownFacts: [
+      "Three insurers are being compared",
+      "The product is a medical card",
+      "The customer wants criteria beyond price",
+    ],
+    unknownFacts: [
+      "Age, budget, and medical history",
+      "Preferred hospital and room rate",
+      "Existing coverage and exclusions",
+    ],
+    riskNotes: [
+      "Product details must be checked against current disclosure documents",
+      "Mention volume or familiarity does not establish product suitability",
+    ],
+    suggestedResponse:
+      "Besides premium, compare annual and lifetime limits, room rate, co-insurance or deductible, panel hospitals, exclusions, waiting periods, renewal terms, and how benefits change over time. A like-for-like table is more useful than a brand ranking.",
+    responseWarnings: sharedWarnings,
+    sourceUrl: "#demo-source",
   },
   {
-    id: "takaful-comparison",
-    title: "Seeking takaful alternatives with similar benefits",
-    excerpt: "A buyer wants to compare takaful and conventional plans at roughly the same budget.",
-    category: "Takaful",
-    location: "Negeri Sembilan",
-    intent: "High",
+    id: "new-family-planning",
+    isDemo: true,
+    title: "New-family protection planning",
+    opportunityType: "Advice and planning request",
+    quote:
+      "Just had our first baby. Should we prioritise medical insurance, life insurance, or education savings first?",
+    location: "Petaling Jaya",
+    product: "Family protection",
+    postedAt: "2 days ago",
+    level: "high",
     confidence: 90,
-    posted: "2 days ago",
-    signal: "Alternative product request",
-    knownFacts: ["Prefers takaful options", "Has a fixed comparison budget", "Wants equivalent benefits"],
-    unknownFacts: ["Current plan", "Coverage priorities", "Contribution horizon"],
-    suggestedResponse: "Compare benefit definitions, contribution structure, exclusions, and sustainability rather than positioning products as exact equivalents.",
-    warnings: ["Do not imply identical coverage", "Use current product disclosure sheets"],
+    whyItMatters:
+      "The customer is at a life-event trigger and actively requesting guidance.",
+    publicContext:
+      "New parents are publicly asking how to sequence protection and savings priorities.",
+    knownFacts: [
+      "The family recently had its first baby",
+      "Medical, life, and education savings are being considered",
+      "The user wants prioritisation guidance",
+    ],
+    unknownFacts: [
+      "Household income and emergency savings",
+      "Existing employer and personal coverage",
+      "Debts, dependants, and monthly budget",
+    ],
+    riskNotes: [
+      "A recommendation requires a proper family fact-find",
+      "Avoid fear-based messaging around the new child",
+    ],
+    suggestedResponse:
+      "A common starting point is emergency cash flow, essential medical protection, and income protection for the parents before longer-term education savings. The right order depends on existing benefits, dependants, debts, and monthly affordability. A simple needs checklist can make the trade-offs clearer.",
+    responseWarnings: sharedWarnings,
+    sourceUrl: "#demo-source",
   },
   {
-    id: "critical-illness-gap",
-    title: "Does a medical card cover loss of income?",
-    excerpt: "A salaried worker is discovering the difference between hospital bills and critical-illness cash benefits.",
-    category: "Critical illness",
-    location: "Sabah",
-    intent: "Medium",
-    confidence: 79,
-    posted: "3 days ago",
-    signal: "Coverage gap education",
-    knownFacts: ["Has or is considering a medical card", "Concerned about income interruption", "Needs product-category clarity"],
-    unknownFacts: ["Emergency savings", "Employer benefits", "Existing life or critical-illness cover"],
-    suggestedResponse: "Explain the general difference between reimbursement-based medical coverage and lump-sum protection, then suggest a needs and budget review.",
-    warnings: ["Avoid personalized sufficiency claims without a fact-find", "Do not present benefits as guaranteed"],
+    id: "sme-group-medical",
+    isDemo: true,
+    title: "SME group-medical request",
+    opportunityType: "Business purchase request",
+    quote:
+      "I run a company with 12 staff. Looking for affordable group medical coverage. Where should I start?",
+    location: "Kuala Lumpur",
+    product: "SME group medical",
+    postedAt: "2 days ago",
+    level: "very_high",
+    confidence: 97,
+    whyItMatters:
+      "The user disclosed team size and a clear business requirement.",
+    publicContext:
+      "A business owner is publicly seeking a starting point for employee medical coverage.",
+    knownFacts: [
+      "The company has 12 employees",
+      "The requirement is group medical coverage",
+      "Affordability is important",
+    ],
+    unknownFacts: [
+      "Employee age profile and locations",
+      "Desired inpatient and outpatient benefits",
+      "Current benefits and annual budget",
+    ],
+    riskNotes: [
+      "Final terms depend on census data and insurer underwriting",
+      "Do not ask for employee personal data in public",
+    ],
+    suggestedResponse:
+      "For a 12-person team, start with the employee census, inpatient versus outpatient priorities, annual limit, panel access, exclusions, and target budget. I can share a non-sensitive checklist for comparing group plans before any employee details are collected.",
+    responseWarnings: sharedWarnings,
+    sourceUrl: "#demo-source",
   },
   {
-    id: "motor-renewal",
-    title: "Motor renewal quote is higher despite no claims",
-    excerpt: "The owner is comparing renewal channels and asking which factors affect the premium.",
-    category: "Motor insurance",
-    location: "Melaka",
-    intent: "Medium",
-    confidence: 81,
-    posted: "3 days ago",
-    signal: "Price comparison",
-    knownFacts: ["No recent claim reported", "Renewal quote increased", "Customer is shopping around"],
-    unknownFacts: ["Vehicle and insured value", "Coverage add-ons", "No-claim discount details"],
-    suggestedResponse: "List common quote variables and suggest comparing insured value, add-ons, excess, and service features on a like-for-like basis.",
-    warnings: ["Do not infer the cause without the quote breakdown", "Confirm details through licensed channels"],
+    id: "complaint-only",
+    isDemo: true,
+    title: "Premium complaint without help-seeking intent",
+    opportunityType: "Complaint only",
+    quote: "My insurance premium is getting too expensive.",
+    location: "Unknown",
+    product: "Unknown",
+    postedAt: "3 days ago",
+    level: "low",
+    confidence: 62,
+    whyItMatters:
+      "This is dissatisfaction, but there is no request for an alternative, advice, or agent. CariLead does not classify every complaint as a qualified opportunity.",
+    publicContext:
+      "A short public complaint that contains no product detail, budget, location, or request for help.",
+    knownFacts: ["The poster feels the premium is expensive"],
+    unknownFacts: [
+      "Product and insurer",
+      "Whether the price changed",
+      "Whether the user wants advice or alternatives",
+    ],
+    riskNotes: [
+      "Low context and no explicit help-seeking signal",
+      "A sales response may be intrusive",
+    ],
+    suggestedResponse:
+      "No sales response is recommended from this text alone. Monitor for a follow-up question or a clear request for comparison help.",
+    responseWarnings: sharedWarnings,
+    sourceUrl: "#demo-source",
   },
 ];
 
-export const comparisonRows = [
-  { feature: "Weekly customer-voice summary", free: true, paid: true },
-  { feature: "Top complaints and product themes", free: true, paid: true },
-  { feature: "Curated opportunity previews", free: "3 examples", paid: "Full monitored feed" },
-  { feature: "Intent and confidence scoring", free: false, paid: true },
-  { feature: "Suggested response guidance", free: false, paid: true },
-  { feature: "Saved searches and team workflow", free: false, paid: true },
+export const freeFeatures = [
+  "Top customer complaint themes",
+  "Popular insurance questions",
+  "Product demand trends",
+  "Anonymised opportunity examples",
+  "Insurer and product mention summaries",
+  "Weekly email report",
+];
+
+export const proFeatures = [
+  "Original public source links",
+  "Full public conversation context",
+  "Recent opportunity alerts",
+  "Industry and location filters",
+  "Insurance-product filters",
+  "Opportunity scoring",
+  "Suggested response angles",
+  "Save and track opportunities",
+  "Faster alerts before conversations become old",
+];
+
+export const methodologySteps = [
+  "Search relevant public discussions.",
+  "Remove duplicated, promotional, and unrelated content.",
+  "Identify complaints, questions, comparisons, purchase requests, and switching signals.",
+  "Separate low-value complaints from genuine help-seeking behaviour.",
+  "Link members back to the original public source.",
+];
+
+export const methodologyPrinciples = [
+  "Complaint volume is not market size.",
+  "An insurer mention is not automatically negative.",
+  "Promotion is not customer adoption.",
+  "Switching intent is not counted unless the text supports it.",
+  "A public question is a signal, not a guaranteed customer.",
+  "Source context should always be reviewed before responding.",
 ];
