@@ -36,10 +36,12 @@ def text_hash(text: str | None) -> str:
 @dataclass
 class Deduplicator:
     near_duplicate_threshold: int = 92
+    max_fuzzy_characters: int = 400
     ids: set[str] = field(default_factory=set)
     urls: set[str] = field(default_factory=set)
     hashes: set[str] = field(default_factory=set)
     texts: list[str] = field(default_factory=list)
+    shingle_sets: list[set[str]] = field(default_factory=list)
 
     def is_duplicate(self, item_id: str | None = None, url: str | None = None, text: str | None = None) -> bool:
         if item_id and item_id in self.ids:
@@ -51,13 +53,44 @@ class Deduplicator:
         hashed = text_hash(text)
         if normalized_text and hashed in self.hashes:
             return True
-        if normalized_text and any(fuzz.ratio(normalized_text, old) >= self.near_duplicate_threshold for old in self.texts):
+        comparison_text = normalized_text[: self.max_fuzzy_characters]
+        if comparison_text and any(
+            fuzz.ratio(comparison_text, old) >= self.near_duplicate_threshold
+            for old in self.texts
+        ):
             return True
+        # Treat substantial copied/quoted bodies as non-independent even when
+        # one copy adds a short introduction or attribution.
+        shingles = _content_shingles(text or "", normalized_text)
+        if shingles:
+            for old in self.shingle_sets:
+                smaller = min(len(shingles), len(old))
+                if smaller and len(shingles & old) / smaller >= 0.8:
+                    return True
         if item_id:
             self.ids.add(item_id)
         if normalized_url:
             self.urls.add(normalized_url)
         if normalized_text:
             self.hashes.add(hashed)
-            self.texts.append(normalized_text)
+            self.texts.append(comparison_text)
+            self.shingle_sets.append(shingles)
         return False
+
+
+def _content_shingles(raw_text: str, normalized_text: str, cap: int = 512) -> set[str]:
+    if len(normalized_text) < 80:
+        return set()
+    words = re.findall(r"\w+", raw_text.lower())
+    if len(words) >= 12:
+        step = max(1, (len(words) - 4) // cap)
+        return {
+            " ".join(words[index:index + 5])
+            for index in range(0, len(words) - 4, step)
+        }
+    width = 32
+    step = max(1, (len(normalized_text) - width) // cap)
+    return {
+        normalized_text[index:index + width]
+        for index in range(0, max(1, len(normalized_text) - width + 1), step)
+    }

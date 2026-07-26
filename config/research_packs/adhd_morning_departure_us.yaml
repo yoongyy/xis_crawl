@@ -1,0 +1,35 @@
+slug: adhd_morning_departure_us
+name: ADHD morning departure — United States
+market:
+  country: United States
+  language: English
+  customer: individual consumers
+  product_types: [simple_mobile_application, desktop_utility, browser_extension, simple_consumer_service, physical_plus_digital]
+research_questions:
+  - Do users repeatedly struggle to get ready and leave home?
+  - Are current alarm, routine, and body-doubling apps insufficient?
+  - Do users dislike video calls with strangers?
+  - Do timers increase stress?
+  - Do users want step-by-step audio guidance?
+  - Are users paying for body-doubling or alarm apps, and what makes them cancel?
+  - Is the morning-departure niche underserved?
+keywords:
+  - ADHD cannot get ready
+  - ADHD always late
+  - ADHD leaving the house
+  - ADHD morning routine
+  - time blindness morning
+  - cannot get out the door
+  - body doubling morning
+  - body doubling without video
+  - app that helps me get ready
+  - app to stop being late
+  - alarm app not enough
+  - timers make me anxious
+  - one step at a time routine
+  - audio body doubling
+  - virtual companion morning
+  - getting dressed ADHD
+  - executive dysfunction morning
+competitor_categories: [alarm_apps, routine_apps, adhd_planners, body_doubling_apps, focus_timers]
+sources: [reddit, app_store, google_play, google_trends, youtube]

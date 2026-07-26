@@ -1,0 +1,25 @@
+slug: consumer_problem_discovery_us
+name: Broad consumer problem discovery — United States
+market:
+  country: United States
+  language: English
+  customer: individual consumers
+  product_types: [simple_mobile_application, desktop_utility, browser_extension, simple_consumer_service, physical_plus_digital]
+research_questions:
+  - What repeated personal problem has at least 30 recent independent discussions?
+  - What solution requests recur?
+  - What current apps receive repeated low-rating complaints?
+  - What behaviours are growing in Google Trends?
+  - What problems have payment evidence?
+  - Which opportunities can be solved with a simple product?
+  - Which opportunities are crowded or medically or legally sensitive?
+keywords:
+  - I cannot find an app that works
+  - every app does this badly
+  - is there an app for this
+  - I wish there was an easier way
+  - cancelled my subscription because
+  - one time purchase app
+  - repeated manual workaround
+initial_domains: [sleep, alarms, ADHD, shopping, personal_organization, parenting, relationships, fitness_adherence, household_coordination, pet_care, food_planning, travel_preparation, personal_safety, accessibility, niche_hobbies]
+sources: [reddit, app_store, google_play, google_trends, youtube, hacker_news]

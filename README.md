@@ -1,6 +1,13 @@
-# xhs-malaysia-research
+# Multi-source consumer demand research
 
 Local macOS research prototype for collecting Xiaohongshu/XHS posts and comments, filtering for Malaysian property-agent relevance, classifying pain points, and exporting structured data for later AI analysis. MongoDB Atlas is the primary storage backend when `MONGO_URI` is configured; SQLite remains available as a local fallback and migration source.
+
+The project also includes an additive, United States-focused multi-source demand
+engine. It uses official/public adapters where practical, conservative request
+budgets, manual imports where automation is unreliable, atomic evidence
+extraction, independence caps, and evidence-linked reports. Existing XHS
+commands and data remain intact. XHS is an early-trend source and never proves
+US demand.
 
 This is not a SaaS. It has no frontend, user accounts, billing, proxies, CAPTCHA bypass, posting, DMs, likes, follows, or account automation. It uses your own logged-in XHS account through the open-source `xiaohongshu-cli`.
 
@@ -226,3 +233,59 @@ python main.py analyze \
 ```bash
 pytest
 ```
+
+## United States Demand Research
+
+Check adapters and credential/manual-import status:
+
+```bash
+python main.py sources status
+```
+
+Preview a crawl without making source requests:
+
+```bash
+python main.py research plan \
+  --pack config/research_packs/adhd_morning_departure_us.yaml \
+  --sources reddit,app_store,google_play,youtube,google_trends
+```
+
+Run a bounded research pack:
+
+```bash
+python main.py research run \
+  --pack config/research_packs/adhd_morning_departure_us.yaml \
+  --sources reddit,app_store,google_play,youtube,google_trends \
+  --recent-days 365 --incremental \
+  --max-records 20 --max-comments 200 \
+  --max-reddit-comments 200 --max-youtube-comments 100 \
+  --max-reviews 100 \
+  --max-competitors 5 --max-runtime-minutes 60
+```
+
+Re-analyze or report without crawling:
+
+```bash
+python main.py research analyze \
+  --pack config/research_packs/adhd_morning_departure_us.yaml \
+  --classification-mode rules
+python main.py research report \
+  --pack config/research_packs/adhd_morning_departure_us.yaml
+```
+
+Manual CSV/JSON fallback:
+
+```bash
+python main.py import reviews --source google_play --file data/imports/alarm_app_reviews.csv
+```
+
+The database migration is additive and idempotent. See
+`docs/MULTISOURCE_MIGRATION_PLAN.md`. Raw payloads are versioned under
+`data/raw/<source>/<YYYY-MM-DD>/`. Rules mode is the default and requires no
+paid AI API.
+
+The App Store adapter records the public download price separately from
+in-app or subscription pricing. A `free_download` value does not prove that a
+product has no paid upgrades. Review and comment records are filtered by the
+requested freshness window; older public reviews are not counted in a recent
+research run.

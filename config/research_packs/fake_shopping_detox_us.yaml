@@ -1,0 +1,33 @@
+slug: fake_shopping_detox_us
+name: Fake shopping detox — United States
+market:
+  country: United States
+  language: English
+  customer: individual consumers
+  product_types: [simple_mobile_application, simple_consumer_service]
+research_questions:
+  - Do users want a way to experience shopping without spending?
+  - Are fake-shopping products already available and what do they lack?
+  - Does simulated shopping reduce or reinforce compulsive behaviour?
+  - Are users asking for live-shopping or auction simulation?
+  - Would users pay once for a polished version?
+  - Is this a temporary viral trend?
+keywords:
+  - shopping addiction app
+  - fake shopping app
+  - shopping without buying
+  - impulse shopping simulator
+  - no buy app
+  - curb impulse spending
+  - fake checkout
+  - simulated shopping
+  - auction addiction
+  - live shopping addiction
+  - TikTok Shop addiction
+  - app to stop online shopping
+  - browse without purchasing
+  - shopping dopamine without spending
+  - I wish there was a fake store
+  - no subscription impulse control app
+competitor_categories: [fake_shopping_apps, no_buy_trackers, shopping_blockers, spending_pause_apps, shopping_addiction_tools]
+sources: [reddit, app_store, google_play, google_trends, youtube]

@@ -271,7 +271,7 @@ def plan_insurance_crawl(
     console.print("Plan approved. No crawl was started by plan-crawl.")
 
 
-@app.command("research")
+@app.command("xhs-research")
 def insurance_research(
     industry: str = "insurance",
     country: str = "malaysia",
@@ -548,3 +548,11 @@ def _print_insurance_metrics(metrics) -> None:
 
 def _safe(value: str) -> str:
     return "".join(ch if ch.isalnum() else "_" for ch in value)[:80]
+
+
+# Register the additive multi-source command groups after the legacy command
+# functions exist. The research group callback preserves the prior
+# `research --industry insurance ...` invocation.
+from .us_cli import register_us_cli
+
+register_us_cli(app, insurance_research)
