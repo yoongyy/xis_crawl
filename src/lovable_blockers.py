@@ -43,6 +43,11 @@ BLOCKED_LANGUAGE = (
     "blocked", "stuck", "cannot", "can't", "doesn't work", "does not work",
     "failed", "error", "broken", "production down",
 )
+RESCUE_INTENT_LANGUAGE = (
+    *BLOCKED_LANGUAGE,
+    "need help", "can someone help", "how do i fix", "how can i fix",
+    "any idea why", "having issues", "not working", "keeps failing",
+)
 IMPACT_LANGUAGE = (
     "customer", "users", "launch", "production", "revenue", "live",
     "security", "data loss", "deadline",
@@ -213,6 +218,9 @@ def score_blocker_prefilter(record: ApifyNormalizedRecord) -> dict[str, Any]:
     text = f"{record.title or ''} {record.text}".lower()
     ignored = [pattern for pattern in IGNORE_PATTERNS if pattern in text]
     support_only = [pattern for pattern in SUPPORT_ONLY_PATTERNS if pattern in text]
+    rescue_intent = any(pattern in text for pattern in RESCUE_INTENT_LANGUAGE)
+    if _is_lovable_account_or_credit_issue(text):
+        support_only.append("lovable account, login, or credit issue")
     topics = [
         name for name, patterns in BLOCKER_TOPICS.items()
         if any(pattern in text for pattern in patterns)
@@ -220,17 +228,20 @@ def score_blocker_prefilter(record: ApifyNormalizedRecord) -> dict[str, Any]:
     score = 0
     if topics:
         score += min(3, len(topics))
-    if any(pattern in text for pattern in BLOCKED_LANGUAGE):
+    if rescue_intent:
         score += 2
     if any(pattern in text for pattern in IMPACT_LANGUAGE):
         score += 2
     if record.comment_count and record.comment_count > 0:
         score += 1
-    if ignored or support_only:
+    # Integration keywords alone describe many tutorials and showcases. A
+    # rescue lead must also contain an explicit failure or request for help.
+    if ignored or support_only or not rescue_intent:
         score = 0
     return {
         "score": score,
         "topics": topics,
+        "rescue_intent": rescue_intent,
         "ignored_patterns": ignored,
         "support_only_patterns": support_only,
     }
@@ -243,7 +254,11 @@ def score_blocker_final(
 ) -> dict[str, Any]:
     text = f"{record.title or ''} {record.text}".lower()
     support_only = bool(prefilter["support_only_patterns"])
-    solvable = bool(prefilter["topics"]) and not support_only
+    solvable = (
+        bool(prefilter["topics"])
+        and bool(prefilter.get("rescue_intent"))
+        and not support_only
+    )
     score = int(prefilter["score"])
     if any(word in text for word in ("i ", "my ", "we ", "our ")):
         score += 1
@@ -256,6 +271,24 @@ def score_blocker_final(
         "independent_developer_solvable": solvable,
         "comment_evidence_count": len(comments),
     }
+
+
+def _is_lovable_account_or_credit_issue(text: str) -> bool:
+    account_markers = (
+        "2-factor", "two-factor", "2fa", "verification code",
+        "send me text message to login", "logging in",
+    )
+    credit_markers = (
+        "ai credits", "credit usage", "credits being used",
+        "credits used", "refund my credits",
+    )
+    return (
+        ("lovable" in text or "loveable" in text)
+        and (
+            any(marker in text for marker in account_markers)
+            or any(marker in text for marker in credit_markers)
+        )
+    )
 
 
 def _lead_payload(

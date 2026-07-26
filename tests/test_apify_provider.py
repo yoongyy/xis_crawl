@@ -9,7 +9,11 @@ import httpx
 import pytest
 
 import src.providers.apify_client as apify_module
-from src.lovable_blockers import run_lovable_blockers
+from src.lovable_blockers import (
+    run_lovable_blockers,
+    score_blocker_final,
+    score_blocker_prefilter,
+)
 from src.malaysia_opportunities import run_global_to_malaysia
 from src.providers.apify_client import (
     ApifyClient,
@@ -225,6 +229,38 @@ def test_stale_reddit_record_is_rejected(
     assert result["stale_records"] == 1
     assert result["verified_recent_posts"] == 0
     assert result["qualifying_blockers"] == []
+
+
+def test_lovable_tutorial_is_not_a_rescue_lead() -> None:
+    item = _item(
+        text=(
+            "My users asked for API and CLI access. After adding developer "
+            "access, I raised my lifetime deal from $35 to $49."
+        )
+    )
+    item["title"] = "Lovable builders might be focusing on the wrong features"
+    record = normalize_apify_item(
+        source="reddit", item=item, actor_id="actor", actor_run_id="run",
+        raw_json_path="raw.json", schema=_schema(),
+    )
+    prefilter = score_blocker_prefilter(record)
+    final = score_blocker_final(record, prefilter, [])
+    assert prefilter["rescue_intent"] is False
+    assert prefilter["score"] == 0
+    assert final["independent_developer_solvable"] is False
+
+
+def test_explicit_production_failure_can_qualify_as_rescue() -> None:
+    record = normalize_apify_item(
+        source="reddit", item=_item(), actor_id="actor", actor_run_id="run",
+        raw_json_path="raw.json", schema=_schema(),
+    )
+    prefilter = score_blocker_prefilter(record)
+    final = score_blocker_final(record, prefilter, [])
+    assert prefilter["rescue_intent"] is True
+    assert prefilter["score"] >= 4
+    assert final["score"] >= 6
+    assert final["independent_developer_solvable"] is True
 
 
 def test_collection_deduplicates_source_ids(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
