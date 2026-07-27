@@ -10,6 +10,7 @@ from rich.table import Table
 
 from .lovable_blockers import blockers_plan, run_lovable_blockers
 from .malaysia_opportunities import opportunities_plan, run_global_to_malaysia
+from .opportunity_notifications import notify_opportunity_candidates
 from .providers.apify_client import ApifyClient, ApifyError
 from .providers.apify_registry import ApifyActorRegistry
 
@@ -239,6 +240,20 @@ def opportunities_run_command(
         target_market=target_market,
         mode=mode,
     )
+    notification = notify_opportunity_candidates(result)
+    if notification["status"] == "sent":
+        console.print(
+            f"[green]Opportunity email sent:[/green] "
+            f"{notification['candidate_count']} candidate(s)"
+        )
+    elif notification["status"] == "failed":
+        console.print(
+            f"[yellow]Opportunity email failed:[/yellow] {notification['reason']}"
+        )
+    else:
+        console.print(
+            f"[dim]Opportunity email skipped: {notification['reason']}[/dim]"
+        )
     _print_result(result, "Candidates", len(result.get("candidates") or []))
 
 
