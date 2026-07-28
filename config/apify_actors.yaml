@@ -72,15 +72,15 @@ sources:
       discovery:
         queries: "{{queries}}"
         sort: new
-        timeframe: year
+        timeframe: month
         scrapeComments: false
         maxPosts: 50
         includeNsfw: false
         maximize_coverage: false
       deep_comments:
         queries: "{{queries}}"
-        sort: relevance
-        timeframe: year
+        sort: new
+        timeframe: month
         scrapeComments: true
         maxComments: 60
         maxPosts: 5

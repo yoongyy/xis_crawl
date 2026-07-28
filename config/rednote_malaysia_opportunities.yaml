@@ -7,6 +7,10 @@ rotate_queries: true
 rotation_windows: 6
 max_visible_cards_per_query: 10
 max_detail_opens_per_run: 12
+max_evidence_age_days: 30
+search_sort: newest
+search_publish_time_filter: one_week
+require_visible_displayed_date: true
 queries:
   - "马来西亚 愿意付费 app"
   - "马来西亚 预算 求推荐"
@@ -51,5 +55,7 @@ rules:
   - Save a collection failure and send it as a failed run, never as a market decision.
   - Rotate eight high-intent searches per run instead of repeating the same search set.
   - Deduplicate canonical post URLs before analysis.
+  - For every query, open Filter and select 排序依据=最新 and 发布时间=一周内 before collecting cards.
+  - Exclude any post older than 30 days or with a missing, ambiguous, or future displayed date.
   - On a successful collection, nominate one concrete paid validation as today's best bet.
   - Send a CEO action email after every run.

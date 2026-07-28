@@ -197,6 +197,9 @@ class ApifyClient:
         max_cost_usd: float | None = None,
         seen_source_ids: set[str] | None = None,
         incremental_after: datetime | None = None,
+        published_after: datetime | None = None,
+        published_before: datetime | None = None,
+        require_verified_timestamp: bool = False,
         query: str | None = None,
     ) -> ApifyRunResult:
         started = self.start_actor(
@@ -232,6 +235,20 @@ class ApifyClient:
                 query=query,
             )
             if record.source_id in seen:
+                continue
+            if require_verified_timestamp and (
+                not record.timestamp_verified or record.published_at is None
+            ):
+                continue
+            if published_after and (
+                record.published_at is None
+                or record.published_at < published_after
+            ):
+                continue
+            if published_before and (
+                record.published_at is None
+                or record.published_at > published_before
+            ):
                 continue
             if incremental_after and record.published_at and record.published_at <= incremental_after:
                 continue

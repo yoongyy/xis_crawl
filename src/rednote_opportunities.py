@@ -5,10 +5,11 @@ import json
 import math
 import os
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable
 from urllib.parse import parse_qsl, quote_plus, urlencode, urlsplit, urlunsplit
+from zoneinfo import ZoneInfo
 
 import httpx
 from dotenv import load_dotenv
@@ -19,6 +20,8 @@ DEFAULT_CAPTURE_PATH = Path(
 )
 DEFAULT_REPORT_DIR = Path("data/reports")
 DEFAULT_STATE_PATH = Path("data/reports/rednote_malaysia_seen.json")
+MALAYSIA_TIMEZONE = ZoneInfo("Asia/Kuala_Lumpur")
+MAX_EVIDENCE_AGE_DAYS = 30
 
 DEFAULT_QUERIES = [
     "马来西亚 求推荐",
@@ -396,9 +399,28 @@ def analyze_rednote_capture(
 ) -> dict[str, Any]:
     raw_rows = _capture_rows(capture)
     records_collected = len(raw_rows)
+    reference_time = _capture_reference_time(capture.get("generated_at"))
+    recent_rows: list[dict[str, Any]] = []
+    stale_or_undated = 0
+    for row in raw_rows:
+        published_at = _parse_rednote_date(
+            _displayed_date(row),
+            reference_time,
+        )
+        if (
+            published_at is None
+            or published_at.date()
+            < (reference_time - timedelta(days=MAX_EVIDENCE_AGE_DAYS)).date()
+            or published_at.date() > reference_time.date()
+        ):
+            stale_or_undated += 1
+            continue
+        normalized_date = dict(row)
+        normalized_date["published_at"] = published_at.isoformat()
+        recent_rows.append(normalized_date)
     unique_rows: list[dict[str, Any]] = []
     seen_urls: set[str] = set()
-    for row in raw_rows:
+    for row in recent_rows:
         raw_url = _first_url(row)
         dedupe_key = _dedupe_key(raw_url)
         if not dedupe_key or dedupe_key in seen_urls:
@@ -433,6 +455,8 @@ def analyze_rednote_capture(
         "ceo_decision": decision,
         "records_collected": records_collected,
         "unique_posts": len(unique_rows),
+        "max_evidence_age_days": MAX_EVIDENCE_AGE_DAYS,
+        "stale_or_undated_excluded": stale_or_undated,
         "new_since_previous_run": len(new_urls),
         "collection_cost_usd": 0.0,
         "queries_run": len((capture.get("queries") or {})),
@@ -640,6 +664,11 @@ def _text_report(report: dict[str, Any]) -> str:
         "",
         f"{report.get('records_collected', 0)} RedNote cards collected.",
         f"{report.get('unique_posts', 0)} unique posts.",
+        (
+            f"{report.get('stale_or_undated_excluded', 0)} stale or undated "
+            f"cards excluded by the "
+            f"{report.get('max_evidence_age_days', 30)}-day rule."
+        ),
         f"{report.get('new_since_previous_run', 0)} were new versus the previous run.",
         "Collection cost: $0.00000 (logged-in browser; no Apify).",
     ]
@@ -733,6 +762,125 @@ def _capture_rows(capture: dict[str, Any]) -> list[dict[str, Any]]:
         if isinstance(raw, dict):
             rows.append(dict(raw))
     return rows
+
+
+def _capture_reference_time(value: Any) -> datetime:
+    text = str(value or "").strip().replace("Z", "+00:00")
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        parsed = datetime.now(MALAYSIA_TIMEZONE)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=MALAYSIA_TIMEZONE)
+    return parsed.astimezone(MALAYSIA_TIMEZONE)
+
+
+def _displayed_date(row: dict[str, Any]) -> str:
+    for key in ("displayed_date", "date", "published_at"):
+        value = str(row.get(key) or "").strip()
+        if value:
+            return value
+    return ""
+
+
+def _parse_rednote_date(
+    value: str,
+    reference: datetime,
+) -> datetime | None:
+    text = _clean(value)
+    if not text:
+        return None
+    lowered = text.lower()
+    if any(term in lowered for term in ("just now", "today")) or any(
+        term in text for term in ("刚刚", "今天")
+    ):
+        return reference
+    if "yesterday" in lowered or "昨天" in text:
+        return reference - timedelta(days=1)
+
+    relative_patterns = (
+        (r"(\d+)\s*(?:minutes?|mins?)\s*ago", "minutes"),
+        (r"(\d+)\s*分钟前", "minutes"),
+        (r"(\d+)\s*(?:hours?|hrs?)\s*ago", "hours"),
+        (r"(\d+)\s*小时前", "hours"),
+        (r"(\d+)\s*(?:days?|d)\s*ago", "days"),
+        (r"(\d+)\s*天前", "days"),
+        (r"(\d+)\s*(?:weeks?|w)\s*ago", "weeks"),
+        (r"(\d+)\s*周前", "weeks"),
+    )
+    for pattern, unit in relative_patterns:
+        match = re.search(pattern, lowered if "ago" in pattern else text)
+        if match:
+            return reference - timedelta(**{unit: int(match.group(1))})
+
+    cleaned = re.sub(r"(?i)\bedited\s+at\b", " ", text)
+    iso_match = re.search(r"\b(20\d{2})-(\d{1,2})-(\d{1,2})\b", cleaned)
+    if iso_match:
+        return _local_date(
+            int(iso_match.group(1)),
+            int(iso_match.group(2)),
+            int(iso_match.group(3)),
+            reference,
+            explicit_year=True,
+        )
+    slash_year = re.search(
+        r"\b(\d{1,2})/(\d{1,2})/(20\d{2})\b",
+        cleaned,
+    )
+    if slash_year:
+        return _local_date(
+            int(slash_year.group(3)),
+            int(slash_year.group(1)),
+            int(slash_year.group(2)),
+            reference,
+            explicit_year=True,
+        )
+    month_name = re.search(
+        r"\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)"
+        r"[a-z]*\s+(\d{1,2})(?:,\s*(20\d{2}))?\b",
+        cleaned,
+        re.IGNORECASE,
+    )
+    if month_name:
+        month = datetime.strptime(month_name.group(1)[:3], "%b").month
+        explicit_year = bool(month_name.group(3))
+        return _local_date(
+            int(month_name.group(3) or reference.year),
+            month,
+            int(month_name.group(2)),
+            reference,
+            explicit_year=explicit_year,
+        )
+    month_day = re.search(r"(?<!\d)(\d{1,2})-(\d{1,2})(?!-\d)", cleaned)
+    if month_day:
+        return _local_date(
+            reference.year,
+            int(month_day.group(1)),
+            int(month_day.group(2)),
+            reference,
+            explicit_year=False,
+        )
+    return None
+
+
+def _local_date(
+    year: int,
+    month: int,
+    day: int,
+    reference: datetime,
+    *,
+    explicit_year: bool,
+) -> datetime | None:
+    try:
+        parsed = datetime(year, month, day, tzinfo=MALAYSIA_TIMEZONE)
+    except ValueError:
+        return None
+    if not explicit_year and parsed.date() > reference.date():
+        try:
+            parsed = parsed.replace(year=year - 1)
+        except ValueError:
+            return None
+    return parsed
 
 
 def _read_seen(path: Path) -> set[str]:

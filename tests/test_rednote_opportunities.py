@@ -30,6 +30,7 @@ def _capture() -> dict[str, Any]:
                     "url": "https://www.rednote.com/search_result/post-1?utm_source=a",
                     "author": "user-1",
                     "engagement": "125",
+                    "date": "07-27",
                     "body": "学生需要可靠的part time平台，预算RM20。",
                 },
                 {
@@ -37,6 +38,7 @@ def _capture() -> dict[str, Any]:
                     "url": "https://www.rednote.com/search_result/post-1?utm_source=b",
                     "author": "user-1",
                     "engagement": "125",
+                    "date": "1 day ago",
                     "body": "duplicate",
                 },
                 {
@@ -44,6 +46,7 @@ def _capture() -> dict[str, Any]:
                     "url": "https://www.rednote.com/search_result/post-2",
                     "author": "user-2",
                     "engagement": "40",
+                    "date": "Edited at Jul 20",
                     "body": "现有平台不好用，想要安全的兼职app。",
                 },
             ]
@@ -116,6 +119,25 @@ def test_bare_rednote_detail_url_uses_search_fallback(tmp_path: Path) -> None:
         "https://www.rednote.com/search_result?keyword="
     )
     assert "/search_result/post-1" not in source_url
+
+
+def test_excludes_records_older_than_30_days_or_without_date(
+    tmp_path: Path,
+) -> None:
+    capture = _capture()
+    rows = next(iter(capture["queries"].values()))
+    rows[0]["date"] = "2025-10-10"
+    rows[1]["date"] = ""
+    rows[2]["date"] = "8d ago Malaysia"
+
+    report = analyze_rednote_capture(
+        capture, state_path=tmp_path / "seen.json"
+    )
+
+    assert report["records_collected"] == 3
+    assert report["unique_posts"] == 1
+    assert report["stale_or_undated_excluded"] == 2
+    assert report["max_evidence_age_days"] == 30
 
 
 def test_failed_collection_emails_failure_not_market_decision(

@@ -134,6 +134,38 @@ def test_apify_successful_run(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -
     assert fake.requests[0]["params"] is None
 
 
+def test_apify_strict_published_window_excludes_old_future_and_undated(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    now = datetime.now(timezone.utc)
+    undated = _item("undated")
+    undated.pop("createdAt")
+    items = [
+        _item("recent", published_at=now - timedelta(days=2)),
+        _item("old", published_at=now - timedelta(days=31)),
+        _item("future", published_at=now + timedelta(days=1)),
+        undated,
+    ]
+    client, _ = _client(tmp_path, monkeypatch, _responses(items=items))
+
+    result = client.collect(
+        source="reddit",
+        actor_id="developer~reddit",
+        actor_input={"queries": ["manual spreadsheet"]},
+        actor_schema=_schema(),
+        maximum_records=10,
+        timeout_seconds=10,
+        published_after=now - timedelta(days=30),
+        published_before=now,
+        require_verified_timestamp=True,
+    )
+
+    assert [record.source_id for record in result.normalized_records] == [
+        "recent"
+    ]
+
+
 def test_actor_failure_without_dataset_raises(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     responses = [
         FakeResponse(201, {"data": {"id": "run-failed"}}),
@@ -203,6 +235,32 @@ def test_numeric_string_reddit_timestamp_is_verified() -> None:
     )
     assert record.published_at is not None
     assert record.timestamp_verified is True
+
+
+def test_reddit_opportunity_templates_use_newest_month_window() -> None:
+    registry = ApifyActorRegistry(Path("config/apify_actors.yaml"))
+    actor = registry.actor("reddit")
+    assert actor is not None
+
+    discovery = actor.template(
+        "discovery",
+        queries=["spreadsheet workaround"],
+        maximum_records=50,
+        target_market="global",
+    )
+    deep_comments = actor.template(
+        "deep_comments",
+        queries=["spreadsheet workaround"],
+        maximum_records=50,
+        target_market="global",
+    )
+
+    assert discovery is not None
+    assert discovery["sort"] == "new"
+    assert discovery["timeframe"] == "month"
+    assert deep_comments is not None
+    assert deep_comments["sort"] == "new"
+    assert deep_comments["timeframe"] == "month"
 
 
 def test_actor_item_query_overrides_batch_fallback() -> None:
