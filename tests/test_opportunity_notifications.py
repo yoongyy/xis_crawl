@@ -234,6 +234,35 @@ def test_sends_actionable_best_bet_on_every_run(
     ) == 1
 
 
+def test_global_email_opens_with_best_bet_and_reports_stale_exclusions(
+    tmp_path: Path,
+    monkeypatch: Any,
+) -> None:
+    _configure_email(monkeypatch)
+    requests: list[dict[str, Any]] = []
+
+    def fake_post(url: str, **kwargs: Any) -> FakeResponse:
+        requests.append({"url": url, **kwargs})
+        return FakeResponse()
+
+    result = _best_bet_result()
+    result["workflow"] = "global_opportunity_dig"
+    result["stale_or_undated_excluded"] = 5
+
+    notify_opportunity_candidates(
+        result,
+        state_path=tmp_path / "state.json",
+        post=fake_post,
+    )
+
+    text = requests[0]["json"]["text"]
+    assert text.startswith(
+        "TODAY'S BEST BET: Returns-cost recovery audit for small Shopify brands."
+    )
+    assert text.count("TODAY'S BEST BET:") == 1
+    assert "Stale or undated records excluded: 5." in text
+
+
 def test_abstract_legacy_cluster_is_not_presented_as_a_business(
     tmp_path: Path,
     monkeypatch: Any,

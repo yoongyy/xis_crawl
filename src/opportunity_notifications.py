@@ -643,7 +643,7 @@ def _collection_summary(result: dict[str, Any]) -> list[str]:
         ]
         known_costs = [float(value) for value in costs if value is not None]
         cost = sum(known_costs) if known_costs else None
-    return [
+    summary = [
         f"Records collected: {records}.",
         f"Unique posts: {unique if unique is not None else 'not recorded'}.",
         f"New versus yesterday: {new if new is not None else 'not recorded'}.",
@@ -653,6 +653,13 @@ def _collection_summary(result: dict[str, Any]) -> list[str]:
             else "Actual Apify cost: not reported."
         ),
     ]
+    stale_or_undated = result.get("stale_or_undated_excluded")
+    if stale_or_undated is not None:
+        summary.insert(
+            2,
+            f"Stale or undated records excluded: {int(stale_or_undated)}.",
+        )
+    return summary
 
 
 def _evidence_summary(candidate: dict[str, Any]) -> str:
@@ -737,6 +744,8 @@ def _is_daily_commander(result: dict[str, Any]) -> bool:
 def _actionable_headline(result: dict[str, Any], opportunity: str) -> str:
     if _is_daily_commander(result):
         return f"Hey Kenny — today's one company priority is: {opportunity}."
+    if str(result.get("workflow") or "").lower() == "global_opportunity_dig":
+        return f"TODAY'S BEST BET: {opportunity}."
     return (
         f"{_workflow_name(result)} source candidate: {opportunity}. "
         "This is not a second simultaneous build; the 7:00 AM Daily Opportunity "
