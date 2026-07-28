@@ -32,8 +32,8 @@ def apify_status(
     registry = ApifyActorRegistry(config)
     client = ApifyClient()
     console.print(
-        f"APIFY_API_TOKEN: [{'green' if client.configured else 'yellow'}]"
-        f"{'configured' if client.configured else 'missing'}[/]"
+        f"APIFY API token pool: [{'green' if client.configured else 'yellow'}]"
+        f"{f'configured ({client.token_count})' if client.configured else 'missing'}[/]"
     )
     table = Table("Source", "Actor ID", "Metadata", "Approval", "Executable", "Reason")
     for source in registry.sources():
@@ -67,7 +67,7 @@ def apify_test(
     client = ApifyClient()
     actor = registry.actor(source)
     if not client.configured:
-        console.print("[red]Cannot test: APIFY_API_TOKEN is missing.[/red]")
+        console.print("[red]Cannot test: no Apify API token is configured.[/red]")
         raise typer.Exit(code=1)
     ready, reason = registry.can_test(source)
     if not actor or not ready:
@@ -243,7 +243,7 @@ def opportunities_run_command(
     notification = notify_opportunity_candidates(result)
     if notification["status"] == "sent":
         console.print(
-            f"[green]Opportunity email sent:[/green] "
+            f"[green]Opportunity summary email sent:[/green] "
             f"{notification['candidate_count']} candidate(s)"
         )
     elif notification["status"] == "failed":

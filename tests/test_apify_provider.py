@@ -82,6 +82,7 @@ def _client(
     monkeypatch: pytest.MonkeyPatch,
     responses: list[FakeResponse],
 ) -> tuple[ApifyClient, FakeHttp]:
+    monkeypatch.setenv("APIFY_API_TOKENS", "")
     monkeypatch.setenv("APIFY_API_TOKEN", "fake-test-token")
     fake = FakeHttp(responses)
     return (
@@ -308,6 +309,81 @@ def test_cost_limit_is_forwarded_to_apify(
     )
     client.start_actor("actor", {}, estimated_cost_usd=0.05, max_cost_usd=0.10)
     assert fake.requests[0]["params"] == {"maxTotalChargeUsd": 0.10}
+
+
+def test_actor_start_switches_to_next_token_when_quota_is_exhausted(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("APIFY_API_TOKENS", "limited-token,new-token")
+    monkeypatch.setenv("APIFY_API_TOKEN", "legacy-token")
+    fake = FakeHttp(
+        [
+            FakeResponse(429, {"error": {"message": "usage limit reached"}}),
+            FakeResponse(201, {"data": {"id": "run-1"}}),
+        ]
+    )
+    client = ApifyClient(
+        http_client=fake,
+        sleeper=lambda _: None,
+        max_retries=0,
+        raw_root=tmp_path / "raw",
+    )
+
+    started = client.start_actor("actor", {})
+
+    assert started["id"] == "run-1"
+    assert client.token_count == 3
+    assert fake.requests[0]["headers"]["Authorization"] == "Bearer limited-token"
+    assert fake.requests[1]["headers"]["Authorization"] == "Bearer new-token"
+
+
+def test_actor_start_stops_after_all_tokens_reject_quota(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("APIFY_API_TOKENS", "limited-token,new-token")
+    monkeypatch.setenv("APIFY_API_TOKEN", "")
+    fake = FakeHttp(
+        [
+            FakeResponse(429, {"error": {"message": "usage limit reached"}}),
+            FakeResponse(429, {"error": {"message": "usage limit reached"}}),
+        ]
+    )
+    client = ApifyClient(
+        http_client=fake,
+        sleeper=lambda _: None,
+        max_retries=0,
+        raw_root=tmp_path / "raw",
+    )
+
+    with pytest.raises(apify_module.ApifyError):
+        client.start_actor("actor", {})
+
+    assert len(fake.requests) == 2
+
+
+def test_dataset_request_does_not_switch_accounts_mid_run(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("APIFY_API_TOKENS", "first-token,second-token")
+    monkeypatch.setenv("APIFY_API_TOKEN", "")
+    fake = FakeHttp(
+        [FakeResponse(429, {"error": {"message": "usage limit reached"}})]
+    )
+    client = ApifyClient(
+        http_client=fake,
+        sleeper=lambda _: None,
+        max_retries=0,
+        raw_root=tmp_path / "raw",
+    )
+
+    with pytest.raises(apify_module.ApifyError):
+        client.retrieve_dataset_items("dataset-1", maximum_records=3)
+
+    assert len(fake.requests) == 1
+    assert fake.requests[0]["headers"]["Authorization"] == "Bearer first-token"
 
 
 def test_opportunity_is_not_researched_until_reddit_is_approved(

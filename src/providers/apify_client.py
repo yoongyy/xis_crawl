@@ -99,7 +99,8 @@ class ApifyClient:
         raw_root: Path = Path("data/raw/apify"),
     ) -> None:
         load_dotenv()
-        self._token = os.getenv("APIFY_API_TOKEN")
+        self._tokens = _configured_tokens()
+        self._token_index = 0
         self.http = http_client or httpx.Client(timeout=30.0)
         self.sleeper = sleeper
         self.poll_interval_seconds = max(0.1, poll_interval_seconds)
@@ -108,7 +109,11 @@ class ApifyClient:
 
     @property
     def configured(self) -> bool:
-        return bool(self._token)
+        return bool(self._tokens)
+
+    @property
+    def token_count(self) -> int:
+        return len(self._tokens)
 
     def start_actor(
         self,
@@ -277,22 +282,33 @@ class ApifyClient:
         **kwargs: Any,
     ) -> Any:
         self._require_token()
-        headers = dict(kwargs.pop("headers", {}))
-        headers["Authorization"] = f"Bearer {self._token}"
+        base_headers = dict(kwargs.pop("headers", {}))
         url = f"{self.base_url}{path}"
-        for attempt in range(self.max_retries + 1):
+        tried_tokens: set[str] = set()
+        attempt = 0
+        while True:
+            token = self._token
+            headers = {**base_headers, "Authorization": f"Bearer {token}"}
             try:
                 response = self.http.request(method, url, headers=headers, **kwargs)
             except httpx.RequestError as exc:
                 if attempt >= self.max_retries:
-                    raise ApifyError(_redact_message(str(exc), self._token)) from exc
+                    raise ApifyError(_redact_message(str(exc), self._tokens)) from exc
                 self.sleeper(2 ** attempt)
+                attempt += 1
+                continue
+            if (
+                _can_switch_token(method, path, response)
+                and self._switch_to_untried_token(tried_tokens | {token})
+            ):
+                tried_tokens.add(token)
                 continue
             if response.status_code in {429, 500, 502, 503, 504} and attempt < self.max_retries:
                 self.sleeper(2 ** attempt)
+                attempt += 1
                 continue
             if response.status_code >= 400:
-                message = _redact_message(response.text[:500], self._token)
+                message = _redact_message(response.text[:500], self._tokens)
                 raise ApifyError(f"Apify API returned {response.status_code}: {message}")
             try:
                 payload = response.json()
@@ -301,7 +317,6 @@ class ApifyClient:
             if expect_envelope and not isinstance(payload, dict):
                 raise ApifySchemaError("Apify API response envelope is not an object")
             return payload
-        raise ApifyError("Apify request failed after retries")
 
     def _store_raw(
         self,
@@ -318,8 +333,8 @@ class ApifyClient:
             "source": source,
             "actor_id": actor_id,
             "actor_run_id": run_id,
-            "run": redact_secrets(run_data, self._token),
-            "items": redact_secrets(items, self._token),
+            "run": redact_secrets(run_data, self._tokens),
+            "items": redact_secrets(items, self._tokens),
         }
         path.write_text(
             json.dumps(payload, ensure_ascii=False, indent=2, default=str),
@@ -328,8 +343,23 @@ class ApifyClient:
         return path
 
     def _require_token(self) -> None:
-        if not self._token:
-            raise ApifyConfigurationError("APIFY_API_TOKEN is not configured")
+        if not self._tokens:
+            raise ApifyConfigurationError(
+                "APIFY_API_TOKENS or APIFY_API_TOKEN is not configured"
+            )
+
+    @property
+    def _token(self) -> str:
+        self._require_token()
+        return self._tokens[self._token_index]
+
+    def _switch_to_untried_token(self, tried_tokens: set[str]) -> bool:
+        for offset in range(1, len(self._tokens) + 1):
+            index = (self._token_index + offset) % len(self._tokens)
+            if self._tokens[index] not in tried_tokens:
+                self._token_index = index
+                return True
+        return False
 
 
 DEFAULT_FIELD_MAP: dict[str, list[str]] = {
@@ -411,25 +441,74 @@ def normalize_apify_item(
     )
 
 
-def redact_secrets(value: Any, token: str | None = None) -> Any:
+def redact_secrets(
+    value: Any,
+    tokens: str | list[str] | tuple[str, ...] | None = None,
+) -> Any:
     if isinstance(value, dict):
         return {
             key: (
                 "[REDACTED]"
                 if key.lower() in {item.lower() for item in SENSITIVE_KEYS}
-                else redact_secrets(item, token)
+                else redact_secrets(item, tokens)
             )
             for key, item in value.items()
         }
     if isinstance(value, list):
-        return [redact_secrets(item, token) for item in value]
+        return [redact_secrets(item, tokens) for item in value]
     if isinstance(value, str):
-        return _redact_message(value, token)
+        return _redact_message(value, tokens)
     return value
 
 
-def _redact_message(value: str, token: str | None) -> str:
-    return value.replace(token, "[REDACTED]") if token else value
+def _redact_message(
+    value: str,
+    tokens: str | list[str] | tuple[str, ...] | None,
+) -> str:
+    configured = [tokens] if isinstance(tokens, str) else list(tokens or [])
+    for token in configured:
+        if token:
+            value = value.replace(token, "[REDACTED]")
+    return value
+
+
+def _configured_tokens() -> list[str]:
+    combined = os.getenv("APIFY_API_TOKENS", "")
+    candidates = [
+        item.strip()
+        for item in combined.replace("\n", ",").replace(";", ",").split(",")
+    ]
+    candidates.append(os.getenv("APIFY_API_TOKEN", "").strip())
+    output: list[str] = []
+    for token in candidates:
+        if token and token not in output:
+            output.append(token)
+    return output
+
+
+def _can_switch_token(
+    method: str,
+    path: str,
+    response: Any,
+) -> bool:
+    if method.upper() != "POST" or not path.startswith("/acts/"):
+        return False
+    if response.status_code in {401, 402, 429}:
+        return True
+    if response.status_code != 403:
+        return False
+    message = str(getattr(response, "text", "")).lower()
+    return any(
+        term in message
+        for term in (
+            "quota",
+            "usage limit",
+            "spending limit",
+            "not enough",
+            "insufficient",
+            "subscription",
+        )
+    )
 
 
 def _first(item: dict[str, Any], aliases: list[str]) -> Any:

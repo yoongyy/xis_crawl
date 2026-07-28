@@ -134,6 +134,23 @@ Generate both insurance reports without recrawling:
 python main.py insurance-report
 ```
 
+## Malaysia RedNote Opportunity Dig
+
+The RedNote opportunity workflow analyzes a bounded JSON capture from a logged-in
+browser session, deduplicates public posts, rejects generic guide/listicle content,
+and emails a plain-language CEO decision after every run. It never posts, comments,
+likes, follows, or messages.
+
+```bash
+python main.py rednote-opportunities \
+  --capture data/raw/rednote_malaysia/opportunity_capture_latest.json \
+  --send-email
+```
+
+The recurring local automation uses
+`config/rednote_malaysia_opportunities.yaml`, runs every four hours, and records
+browser/login/CAPTCHA failures as failed research rather than market decisions.
+
 Insurance outputs include customer-voice and sales-opportunity Markdown/JSON/CSV packages plus anonymized free-summary and source-linked paid-detail JSON interfaces. Public phone numbers are redacted from stored insurance evidence and exports; hidden contact or private profile data is never collected.
 
 Important defaults:
@@ -238,8 +255,9 @@ pytest
 
 Apify is an additional preferred collection layer for Lovable Rescue Watch and
 the staged Global-to-Malaysia Opportunity Dig. Existing XHS and direct adapters
-remain available. The token is read only from `APIFY_API_TOKEN`; status and
-reports show only whether it is configured.
+remain available. Tokens are read from the comma-separated
+`APIFY_API_TOKENS` pool and the legacy `APIFY_API_TOKEN` fallback; status and
+reports show only how many are configured.
 
 Actor IDs are environment-configurable because Actor ownership and schemas can
 change. Before testing an Actor, complete its name, developer, input/output

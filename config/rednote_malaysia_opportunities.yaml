@@ -1,0 +1,23 @@
+country: Malaysia
+source: RedNote
+timezone: Asia/Kuala_Lumpur
+schedule_interval_hours: 4
+max_queries_per_run: 8
+max_visible_cards_per_query: 10
+max_detail_opens_per_run: 12
+queries:
+  - 马来西亚 求推荐
+  - 马来西亚 找不到 app
+  - 马来西亚 太贵 替代
+  - 马来西亚 很麻烦 怎么办
+  - 马来西亚 留学生 困扰
+  - 马来西亚 小生意 痛点
+  - Malaysia recommend app
+  - Malaysia alternative too expensive
+rules:
+  - Read public, visible content only.
+  - Never post, comment, like, follow, message, or access hidden profile data.
+  - Stop on CAPTCHA, risk-control, or authentication failure.
+  - Save a collection failure and send it as a failed run, never as a market decision.
+  - Deduplicate canonical post URLs before analysis.
+  - Send a CEO narrative email after every run.

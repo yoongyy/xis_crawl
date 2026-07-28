@@ -28,6 +28,12 @@ from .malaysia_classifier import MalaysiaClassifier
 from .market_report import generate_market_intelligence
 from .query_matrix import queries_for
 from .report_generator import generate_report
+from .rednote_opportunities import (
+    DEFAULT_CAPTURE_PATH,
+    DEFAULT_REPORT_DIR,
+    DEFAULT_STATE_PATH,
+    run_rednote_opportunity_dig,
+)
 from .storage import COLLECTIONS, Storage
 from .config import load_insurance_config
 from .utils import clean_text, dump_json, is_recent, random_delay, setup_logging
@@ -358,6 +364,48 @@ def import_insurance_browser(
     _print_insurance_metrics(metrics)
     paths = generate_insurance_reports(Storage())
     console.print(f"Generated {len(paths)} insurance report/interface files.")
+
+
+@app.command("rednote-opportunities")
+def rednote_opportunities(
+    capture: Path = typer.Option(
+        DEFAULT_CAPTURE_PATH,
+        help="JSON capture produced from the logged-in RedNote browser session.",
+    ),
+    report_dir: Path = typer.Option(DEFAULT_REPORT_DIR),
+    state_path: Path = typer.Option(DEFAULT_STATE_PATH),
+    send_email: bool = typer.Option(
+        True,
+        "--send-email/--no-send-email",
+        help="Send the CEO narrative to the configured Resend recipient.",
+    ),
+) -> None:
+    """Analyze a browser capture for Malaysia opportunities and email every run."""
+    if not capture.exists():
+        console.print(f"[red]RedNote browser capture not found:[/red] {capture}")
+        raise typer.Exit(code=1)
+    result = run_rednote_opportunity_dig(
+        capture,
+        report_dir=report_dir,
+        state_path=state_path,
+        send_email=send_email,
+    )
+    console.print(
+        f"RedNote dig: {result['ceo_decision']} — "
+        f"{result['unique_posts']} unique post(s), "
+        f"{result['new_since_previous_run']} new."
+    )
+    notification = result["notification"]
+    if notification.get("status") == "sent":
+        console.print(
+            f"[green]Email accepted:[/green] {notification.get('email_id')}"
+        )
+    elif send_email:
+        console.print(
+            f"[red]Email {notification.get('status')}:[/red] "
+            f"{notification.get('reason') or 'unknown error'}"
+        )
+        raise typer.Exit(code=1)
 
 
 @app.command("repair-browser-raw")
