@@ -176,6 +176,16 @@ def _html_email(result: dict[str, Any], candidates: list[dict[str, Any]]) -> str
             f'{html.escape(item["label"])}</a></li>'
             for item in narrative["sources"]
         )
+        prospect_links = "".join(
+            f'<li><a href="{html.escape(item["url"], quote=True)}">'
+            f'{html.escape(item["label"])}</a></li>'
+            for item in narrative["prospect_links"]
+        )
+        published_links = "".join(
+            f'<li><a href="{html.escape(item["url"], quote=True)}">'
+            f'{html.escape(item["label"])}</a></li>'
+            for item in narrative["published_links"]
+        )
         execution = "".join(
             _optional_html_paragraph(label, narrative[key])
             for label, key in (
@@ -188,6 +198,8 @@ def _html_email(result: dict[str, Any], candidates: list[dict[str, Any]]) -> str
                 ("Marketing content", "marketing_plan"),
                 ("7-day scoreboard", "validation_scorecard"),
                 ("Validation budget", "validation_budget"),
+                ("Generated video", "generated_video_path"),
+                ("Publishing blocker", "execution_blocker"),
             )
         )
         sections.append(
@@ -204,6 +216,8 @@ def _html_email(result: dict[str, Any], candidates: list[dict[str, Any]]) -> str
               <p><strong>48-hour move:</strong> {validation}</p>
               <p><strong>Kill criterion:</strong> {kill}</p>
               {execution}
+              {prospect_links_section}
+              {published_links_section}
               {links_section}
             </section>
             """.format(
@@ -221,6 +235,18 @@ def _html_email(result: dict[str, Any], candidates: list[dict[str, Any]]) -> str
                 validation=html.escape(narrative["validation_test"]),
                 kill=html.escape(narrative["kill_criterion"]),
                 execution=execution,
+                prospect_links_section=(
+                    "<p><strong>First 10 customer links:</strong></p>"
+                    f"<ol>{prospect_links}</ol>"
+                    if prospect_links
+                    else ""
+                ),
+                published_links_section=(
+                    "<p><strong>Published campaign links:</strong></p>"
+                    f"<ul>{published_links}</ul>"
+                    if published_links
+                    else ""
+                ),
                 links_section=(
                     f"<p><strong>Evidence links:</strong></p><ul>{links}</ul>"
                     if links
@@ -308,9 +334,25 @@ def _text_email(result: dict[str, Any], candidates: list[dict[str, Any]]) -> str
                 ("Marketing content", "marketing_plan"),
                 ("7-day scoreboard", "validation_scorecard"),
                 ("Validation budget", "validation_budget"),
+                ("Generated video", "generated_video_path"),
+                ("Publishing blocker", "execution_blocker"),
             )
             if narrative[key]
         )
+        if narrative["prospect_links"]:
+            lines.append("First 10 customer links:")
+            lines.extend(
+                f"{index}. {item['label']}: {item['url']}"
+                for index, item in enumerate(
+                    narrative["prospect_links"], start=1
+                )
+            )
+        if narrative["published_links"]:
+            lines.append("Published campaign links:")
+            lines.extend(
+                f"{item['label']}: {item['url']}"
+                for item in narrative["published_links"]
+            )
         lines.extend(
             f"{item['label']}: {item['url']}" for item in narrative["sources"]
         )
@@ -389,6 +431,10 @@ def _candidate_narrative(candidate: dict[str, Any]) -> dict[str, Any]:
             "marketing_plan": "",
             "validation_scorecard": "",
             "validation_budget": "",
+            "generated_video_path": "",
+            "execution_blocker": "",
+            "prospect_links": _prospect_links(candidate),
+            "published_links": _published_links(candidate),
             "sources": _source_links(candidate),
         }
     opportunity = explicit_opportunity or raw_name
@@ -496,6 +542,16 @@ def _candidate_narrative(candidate: dict[str, Any]) -> dict[str, Any]:
         candidate.get("validation_budget")
         or candidate.get("budget")
     )
+    generated_video_path = _first_text(
+        candidate,
+        "generated_video_path",
+        "video_path",
+    )
+    execution_blocker = _first_text(
+        candidate,
+        "execution_blocker",
+        "publishing_blocker",
+    )
     return {
         "actionable": not abstract,
         "opportunity": opportunity,
@@ -519,6 +575,10 @@ def _candidate_narrative(candidate: dict[str, Any]) -> dict[str, Any]:
         "marketing_plan": marketing_plan,
         "validation_scorecard": validation_scorecard,
         "validation_budget": validation_budget,
+        "generated_video_path": generated_video_path,
+        "execution_blocker": execution_blocker,
+        "prospect_links": _prospect_links(candidate),
+        "published_links": _published_links(candidate),
         "sources": _source_links(candidate),
     }
 
@@ -717,6 +777,43 @@ def _source_links(candidate: dict[str, Any]) -> list[dict[str, str]]:
         if len(output) == 3:
             break
     return output
+
+
+def _prospect_links(candidate: dict[str, Any]) -> list[dict[str, str]]:
+    raw_links = candidate.get("prospect_links") or []
+    output: list[dict[str, str]] = []
+    seen: set[str] = set()
+    for item in raw_links:
+        if isinstance(item, dict):
+            raw_url = str(item.get("url") or item.get("href") or "").strip()
+            label = str(
+                item.get("label")
+                or item.get("title")
+                or item.get("company")
+                or ""
+            ).strip()
+        else:
+            raw_url = str(item).strip()
+            label = ""
+        canonical = _canonical_url(raw_url)
+        if not canonical or canonical in seen:
+            continue
+        seen.add(canonical)
+        output.append(
+            {
+                "label": label or _descriptive_link_label(canonical),
+                "url": canonical,
+            }
+        )
+        if len(output) == 10:
+            break
+    return output
+
+
+def _published_links(candidate: dict[str, Any]) -> list[dict[str, str]]:
+    published = dict(candidate)
+    published["prospect_links"] = candidate.get("published_links") or []
+    return _prospect_links(published)
 
 
 def _canonical_url(value: str) -> str:

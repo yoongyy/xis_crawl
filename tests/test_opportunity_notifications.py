@@ -91,6 +91,24 @@ def _best_bet_result() -> dict[str, Any]:
                     "20 pitches; 3 calls; 1 paid audit within 7 days."
                 ),
                 "validation_budget": "US$100 maximum before the first sale.",
+                "generated_video_path": "C:/campaign/video.mp4",
+                "execution_blocker": "TikTok upload permission is disabled.",
+                "prospect_links": [
+                    {
+                        "company": "Example Apparel",
+                        "url": "https://example.com/apparel?utm_source=research",
+                    },
+                    {
+                        "label": "Example Fashion",
+                        "url": "https://example.org/fashion",
+                    },
+                ],
+                "published_links": [
+                    {
+                        "label": "RedNote campaign post",
+                        "url": "https://www.rednote.com/explore/post-123",
+                    }
+                ],
                 "evidence_summary": (
                     "Merchants repeatedly describe return handling as a margin and "
                     "manual-analysis problem."
@@ -201,6 +219,13 @@ def test_sends_actionable_best_bet_on_every_run(
     assert "Marketing content: Post one teardown" in payload["text"]
     assert "7-day scoreboard: 20 pitches; 3 calls" in payload["text"]
     assert "Validation budget: US$100 maximum" in payload["text"]
+    assert "Generated video: C:/campaign/video.mp4" in payload["text"]
+    assert "Publishing blocker: TikTok upload permission is disabled." in payload["text"]
+    assert "First 10 customer links:" in payload["text"]
+    assert "1. Example Apparel: https://example.com/apparel" in payload["text"]
+    assert "2. Example Fashion: https://example.org/fashion" in payload["text"]
+    assert "Published campaign links:" in payload["text"]
+    assert "RedNote campaign post: https://www.rednote.com/explore/post-123" in payload["text"]
     assert "Records collected: 489." in payload["text"]
     assert "Actual Apify cost: $0.29055." in payload["text"]
     assert "Open source" not in payload["text"]
