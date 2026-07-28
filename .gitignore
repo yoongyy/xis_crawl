@@ -13,6 +13,7 @@ data/normalized/*
 !data/normalized/.gitkeep
 data/reports/*
 !data/reports/.gitkeep
+data/campaigns/*
 
 # Node & Next.js dependencies and build files
 node_modules/

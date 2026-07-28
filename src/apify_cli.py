@@ -269,11 +269,10 @@ def opportunities_email_brief(
     """Send an action-first CEO email from a structured research brief."""
     result = json.loads(input_path.read_text(encoding="utf-8"))
     workflow = str(result.get("workflow") or "")
-    state_name = (
-        "global_opportunity_email_state.json"
-        if workflow == "global_opportunity_dig"
-        else "global_to_malaysia_email_state.json"
-    )
+    state_name = {
+        "global_opportunity_dig": "global_opportunity_email_state.json",
+        "daily_opportunity_commander": "daily_opportunity_email_state.json",
+    }.get(workflow, "global_to_malaysia_email_state.json")
     notification = notify_opportunity_candidates(
         result,
         state_path=Path("data/reports") / state_name,

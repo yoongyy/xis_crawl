@@ -16,7 +16,7 @@ class FakeResponse:
 
 def _best_bet_result() -> dict[str, Any]:
     return {
-        "workflow": "global_opportunity_dig",
+        "workflow": "daily_opportunity_commander",
         "research_status": "COMPLETE",
         "generated_at": "2026-07-28T08:00:00+00:00",
         "records_collected": 489,
@@ -61,6 +61,36 @@ def _best_bet_result() -> dict[str, Any]:
                 "kill_criterion": (
                     "Stop if no owner shares return data or pays a deposit after 20 pitches."
                 ),
+                "selection_reason": (
+                    "It can be sold before software and has measurable ROI."
+                ),
+                "first_10_customers": (
+                    "Ten Shopify apparel brands processing at least 30 returns monthly."
+                ),
+                "lead_sources": [
+                    "Shopify storefront directories",
+                    "LinkedIn founder search",
+                ],
+                "contact_strategy": (
+                    "Email first; reply publicly only where the owner asked for help; "
+                    "DM only after permission or a relevant public interaction."
+                ),
+                "outreach_script": (
+                    "I found three likely return leaks on your store. May I show "
+                    "you the evidence in a 15-minute call?"
+                ),
+                "landing_page": {
+                    "headline": "Recover margin lost to preventable returns",
+                    "cta": "Book a return leak review",
+                },
+                "marketing_plan": [
+                    "Post one teardown",
+                    "Record one 45-second before/after video",
+                ],
+                "validation_scorecard": (
+                    "20 pitches; 3 calls; 1 paid audit within 7 days."
+                ),
+                "validation_budget": "US$100 maximum before the first sale.",
                 "evidence_summary": (
                     "Merchants repeatedly describe return handling as a margin and "
                     "manual-analysis problem."
@@ -149,11 +179,11 @@ def test_sends_actionable_best_bet_on_every_run(
     payload = requests[0]["json"]
     assert payload["to"] == ["owner@example.com"]
     assert payload["subject"] == (
-        "[CariLead] TODAY'S BEST BET - Returns-cost recovery audit "
+        "[CariLead] TODAY'S ONE COMPANY PRIORITY - Returns-cost recovery audit "
         "for small Shopify brands"
     )
     assert payload["text"].startswith(
-        "Hey Kenny — today's best bet is: Returns-cost recovery audit"
+        "Hey Kenny — today's one company priority is: Returns-cost recovery audit"
     )
     assert "CEO move: VALIDATE NOW." in payload["text"]
     assert "CEO decision: VALIDATE NOW" in payload["text"]
@@ -162,6 +192,15 @@ def test_sends_actionable_best_bet_on_every_run(
     assert "Our wedge: Sell an outcome-focused audit" in payload["text"]
     assert "48-hour move: Contact 20 Shopify brands" in payload["text"]
     assert "Kill criterion: Stop if no owner" in payload["text"]
+    assert "Why this wins today: It can be sold before software" in payload["text"]
+    assert "First 10 customers: Ten Shopify apparel brands" in payload["text"]
+    assert "Where to find them: Shopify storefront directories" in payload["text"]
+    assert "Contact sequence: Email first" in payload["text"]
+    assert "Outreach message: I found three likely return leaks" in payload["text"]
+    assert "Landing page: headline: Recover margin" in payload["text"]
+    assert "Marketing content: Post one teardown" in payload["text"]
+    assert "7-day scoreboard: 20 pitches; 3 calls" in payload["text"]
+    assert "Validation budget: US$100 maximum" in payload["text"]
     assert "Records collected: 489." in payload["text"]
     assert "Actual Apify cost: $0.29055." in payload["text"]
     assert "Open source" not in payload["text"]

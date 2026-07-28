@@ -85,9 +85,12 @@ def notify_opportunity_candidates(
     if decision == "NOT AVAILABLE":
         subject = f"[CariLead] RESEARCH RUN FAILED - {workflow_name}"
     elif narratives:
-        subject = (
-            f"[CariLead] TODAY'S BEST BET - {narratives[0]['opportunity']}"
+        label = (
+            "TODAY'S ONE COMPANY PRIORITY"
+            if _is_daily_commander(result)
+            else f"{workflow_name.upper()} SOURCE CANDIDATE"
         )
+        subject = f"[CariLead] {label} - {narratives[0]['opportunity']}"
     else:
         subject = f"[CariLead] NO BET FOUND - {workflow_name}"
     payload = {
@@ -173,6 +176,20 @@ def _html_email(result: dict[str, Any], candidates: list[dict[str, Any]]) -> str
             f'{html.escape(item["label"])}</a></li>'
             for item in narrative["sources"]
         )
+        execution = "".join(
+            _optional_html_paragraph(label, narrative[key])
+            for label, key in (
+                ("Why this wins today", "selection_reason"),
+                ("First 10 customers", "first_10_customers"),
+                ("Where to find them", "lead_sources"),
+                ("Contact sequence", "contact_strategy"),
+                ("Outreach message", "outreach_script"),
+                ("Landing page", "landing_page"),
+                ("Marketing content", "marketing_plan"),
+                ("7-day scoreboard", "validation_scorecard"),
+                ("Validation budget", "validation_budget"),
+            )
+        )
         sections.append(
             """
             <section style="margin:24px 0">
@@ -186,6 +203,7 @@ def _html_email(result: dict[str, Any], candidates: list[dict[str, Any]]) -> str
               <p><strong>CEO decision:</strong> {decision}</p>
               <p><strong>48-hour move:</strong> {validation}</p>
               <p><strong>Kill criterion:</strong> {kill}</p>
+              {execution}
               {links_section}
             </section>
             """.format(
@@ -202,6 +220,7 @@ def _html_email(result: dict[str, Any], candidates: list[dict[str, Any]]) -> str
                 decision=html.escape(narrative["decision"]),
                 validation=html.escape(narrative["validation_test"]),
                 kill=html.escape(narrative["kill_criterion"]),
+                execution=execution,
                 links_section=(
                     f"<p><strong>Evidence links:</strong></p><ul>{links}</ul>"
                     if links
@@ -218,9 +237,7 @@ def _html_email(result: dict[str, Any], candidates: list[dict[str, Any]]) -> str
             "Research run failed. No CEO market decision was made from an empty collection."
         )
     elif narratives:
-        headline = (
-            f"Hey Kenny — today's best bet is: {narratives[0]['opportunity']}."
-        )
+        headline = _actionable_headline(result, narratives[0]["opportunity"])
     else:
         headline = "Hey Kenny — no concrete bet survived this collection."
     return f"""
@@ -248,10 +265,7 @@ def _text_email(result: dict[str, Any], candidates: list[dict[str, Any]]) -> str
             "Research run failed. No CEO market decision was made from an empty collection."
         )
     elif narratives:
-        opening = (
-            "Hey Kenny — today's best bet is: "
-            f"{narratives[0]['opportunity']}."
-        )
+        opening = _actionable_headline(result, narratives[0]["opportunity"])
     else:
         opening = "Hey Kenny — no concrete bet survived this collection."
     lines = [
@@ -281,6 +295,21 @@ def _text_email(result: dict[str, Any], candidates: list[dict[str, Any]]) -> str
                 f"48-hour move: {narrative['validation_test']}",
                 f"Kill criterion: {narrative['kill_criterion']}",
             ]
+        )
+        lines.extend(
+            f"{label}: {narrative[key]}"
+            for label, key in (
+                ("Why this wins today", "selection_reason"),
+                ("First 10 customers", "first_10_customers"),
+                ("Where to find them", "lead_sources"),
+                ("Contact sequence", "contact_strategy"),
+                ("Outreach message", "outreach_script"),
+                ("Landing page", "landing_page"),
+                ("Marketing content", "marketing_plan"),
+                ("7-day scoreboard", "validation_scorecard"),
+                ("Validation budget", "validation_budget"),
+            )
+            if narrative[key]
         )
         lines.extend(
             f"{item['label']}: {item['url']}" for item in narrative["sources"]
@@ -351,6 +380,15 @@ def _candidate_narrative(candidate: dict[str, Any]) -> dict[str, Any]:
             "confidence": "REJECTED",
             "validation_test": "",
             "kill_criterion": "",
+            "selection_reason": "",
+            "first_10_customers": "",
+            "lead_sources": "",
+            "contact_strategy": "",
+            "outreach_script": "",
+            "landing_page": "",
+            "marketing_plan": "",
+            "validation_scorecard": "",
+            "validation_budget": "",
             "sources": _source_links(candidate),
         }
     opportunity = explicit_opportunity or raw_name
@@ -415,6 +453,49 @@ def _candidate_narrative(candidate: dict[str, Any]) -> dict[str, Any]:
         "rejection_threshold",
     ) or "Kill it if fewer than 3 of 10 target buyers commit money."
     confidence = _first_text(candidate, "confidence") or _confidence(candidate)
+    selection_reason = _first_text(
+        candidate,
+        "selection_reason",
+        "why_this_wins_today",
+        "portfolio_comparison",
+    )
+    first_10_customers = _display_value(
+        candidate.get("first_10_customers")
+        or candidate.get("first_customers")
+        or candidate.get("ideal_customer")
+    )
+    lead_sources = _display_value(
+        candidate.get("lead_sources")
+        or candidate.get("where_to_find_customers")
+    )
+    contact_strategy = _display_value(
+        candidate.get("contact_strategy")
+        or candidate.get("outreach_sequence")
+        or candidate.get("channels")
+    )
+    outreach_script = _first_text(
+        candidate,
+        "outreach_script",
+        "first_message",
+        "dm_script",
+    )
+    landing_page = _display_value(
+        candidate.get("landing_page")
+        or candidate.get("landing_page_brief")
+    )
+    marketing_plan = _display_value(
+        candidate.get("marketing_plan")
+        or candidate.get("content_plan")
+    )
+    validation_scorecard = _display_value(
+        candidate.get("validation_scorecard")
+        or candidate.get("seven_day_scorecard")
+        or candidate.get("success_metrics")
+    )
+    validation_budget = _display_value(
+        candidate.get("validation_budget")
+        or candidate.get("budget")
+    )
     return {
         "actionable": not abstract,
         "opportunity": opportunity,
@@ -429,6 +510,15 @@ def _candidate_narrative(candidate: dict[str, Any]) -> dict[str, Any]:
         "confidence": confidence,
         "validation_test": validation_test,
         "kill_criterion": kill_criterion,
+        "selection_reason": selection_reason,
+        "first_10_customers": first_10_customers,
+        "lead_sources": lead_sources,
+        "contact_strategy": contact_strategy,
+        "outreach_script": outreach_script,
+        "landing_page": landing_page,
+        "marketing_plan": marketing_plan,
+        "validation_scorecard": validation_scorecard,
+        "validation_budget": validation_budget,
         "sources": _source_links(candidate),
     }
 
@@ -572,7 +662,26 @@ def _workflow_name(result: dict[str, Any]) -> str:
     mode = str(result.get("mode") or "").lower()
     if workflow == "global_opportunity_dig" or mode == "global":
         return "Global Opportunity"
+    if workflow == "daily_opportunity_commander":
+        return "Daily Opportunity Commander"
     return "Global to Malaysia"
+
+
+def _is_daily_commander(result: dict[str, Any]) -> bool:
+    return (
+        str(result.get("workflow") or "").lower()
+        == "daily_opportunity_commander"
+    )
+
+
+def _actionable_headline(result: dict[str, Any], opportunity: str) -> str:
+    if _is_daily_commander(result):
+        return f"Hey Kenny — today's one company priority is: {opportunity}."
+    return (
+        f"{_workflow_name(result)} source candidate: {opportunity}. "
+        "This is not a second simultaneous build; the 7:00 AM Daily Opportunity "
+        "Commander selects one company-wide validation."
+    )
 
 
 def _is_abstract_candidate(value: str) -> bool:
@@ -680,6 +789,15 @@ def _display_value(value: Any) -> str:
             f"{key}: {item}" for key, item in value.items() if item not in (None, "")
         )
     return ""
+
+
+def _optional_html_paragraph(label: str, value: str) -> str:
+    if not value:
+        return ""
+    return (
+        f"<p><strong>{html.escape(label)}:</strong> "
+        f"{html.escape(value)}</p>"
+    )
 
 
 def _first_not_none(*values: Any) -> Any:

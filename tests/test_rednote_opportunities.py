@@ -68,7 +68,7 @@ def test_analyzes_and_deduplicates_browser_capture(tmp_path: Path) -> None:
     )
     text = _text_report(report)
     assert text.startswith(
-        "Hey Kenny — today's best bet is: "
+        "RedNote source candidate: "
         "Verified part-time work marketplace for Malaysia"
     )
     assert "What to sell now:" in text

@@ -475,7 +475,7 @@ def send_rednote_report(
         "[CariLead RedNote] RESEARCH RUN FAILED - Malaysia"
         if decision == "NOT AVAILABLE"
         else (
-            f"[CariLead RedNote] TODAY'S BEST BET - "
+            f"[CariLead RedNote] SOURCE CANDIDATE - "
             f"{(report.get('best_bet') or {}).get('opportunity')}"
             if report.get("best_bet")
             else "[CariLead RedNote] NO BET FOUND - Malaysia"
@@ -626,8 +626,10 @@ def _text_report(report: dict[str, Any]) -> str:
         )
     elif report.get("best_bet"):
         opening = (
-            "Hey Kenny — today's best bet is: "
-            f"{report['best_bet']['opportunity']}."
+            "RedNote source candidate: "
+            f"{report['best_bet']['opportunity']}. This is not a second "
+            "simultaneous build; the 7:00 AM Daily Opportunity Commander "
+            "selects one company-wide validation."
         )
     else:
         opening = "Hey Kenny — no concrete bet survived this collection."
