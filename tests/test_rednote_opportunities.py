@@ -79,6 +79,45 @@ def test_analyzes_and_deduplicates_browser_capture(tmp_path: Path) -> None:
     assert text.rstrip().splitlines()[-1].startswith("Next action:")
 
 
+def test_preserves_tokenized_rednote_url_while_deduplicating_by_post_id(
+    tmp_path: Path,
+) -> None:
+    capture = _capture()
+    rows = next(iter(capture["queries"].values()))
+    rows[0]["url"] = (
+        "https://www.rednote.com/search_result/post-1"
+        "?xsec_token=working-token&xsec_source=pc_search"
+    )
+    rows[1]["url"] = (
+        "https://www.rednote.com/explore/post-1"
+        "?xsec_token=another-token&xsec_source=pc_search"
+    )
+
+    report = analyze_rednote_capture(
+        capture, state_path=tmp_path / "seen.json"
+    )
+
+    assert report["unique_posts"] == 2
+    source_url = report["best_bet"]["sources"][0]["url"]
+    assert "xsec_token=working-token" in source_url
+    assert "working-token&xsec_source=pc_search" in source_url
+    assert source_url.startswith(
+        "https://www.rednote.com/search_result/post-1"
+    )
+
+
+def test_bare_rednote_detail_url_uses_search_fallback(tmp_path: Path) -> None:
+    report = analyze_rednote_capture(
+        _capture(), state_path=tmp_path / "seen.json"
+    )
+
+    source_url = report["best_bet"]["sources"][0]["url"]
+    assert source_url.startswith(
+        "https://www.rednote.com/search_result?keyword="
+    )
+    assert "/search_result/post-1" not in source_url
+
+
 def test_failed_collection_emails_failure_not_market_decision(
     monkeypatch: Any,
 ) -> None:

@@ -8,7 +8,7 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
-from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+from urllib.parse import parse_qsl, quote_plus, urlencode, urlsplit, urlunsplit
 
 import httpx
 from dotenv import load_dotenv
@@ -399,12 +399,13 @@ def analyze_rednote_capture(
     unique_rows: list[dict[str, Any]] = []
     seen_urls: set[str] = set()
     for row in raw_rows:
-        url = _canonical_url(str(row.get("url") or ""))
-        if not url or url in seen_urls:
+        raw_url = _first_url(row)
+        dedupe_key = _dedupe_key(raw_url)
+        if not dedupe_key or dedupe_key in seen_urls:
             continue
-        seen_urls.add(url)
+        seen_urls.add(dedupe_key)
         normalized = dict(row)
-        normalized["url"] = url
+        normalized["url"] = _clickable_source_url(row, raw_url)
         unique_rows.append(normalized)
 
     previous = _read_seen(state_path)
@@ -777,6 +778,67 @@ def _canonical_url(value: str) -> str:
             query,
             "",
         )
+    )
+
+
+def _first_url(row: dict[str, Any]) -> str:
+    for key in ("public_url", "detail_url", "url"):
+        value = str(row.get(key) or "").strip()
+        if value.startswith(("https://", "http://")):
+            return value
+    return ""
+
+
+def _dedupe_key(value: str) -> str:
+    canonical = _canonical_url(value)
+    if not canonical:
+        return ""
+    post_id = _rednote_post_id(canonical)
+    return f"rednote:{post_id}" if post_id else canonical
+
+
+def _clickable_source_url(row: dict[str, Any], fallback: str = "") -> str:
+    candidates = [
+        str(row.get(key) or "").strip()
+        for key in ("public_url", "detail_url", "url")
+    ]
+    if fallback:
+        candidates.append(fallback)
+    first_canonical = ""
+    for value in candidates:
+        canonical = _canonical_url(value)
+        if not canonical:
+            continue
+        first_canonical = first_canonical or canonical
+        if _rednote_post_id(canonical):
+            if not _has_xsec_token(canonical):
+                continue
+            return value
+        return canonical
+    title = _clean(str(row.get("title") or ""))
+    if first_canonical and _rednote_post_id(first_canonical) and title:
+        return (
+            "https://www.rednote.com/search_result?keyword="
+            f"{quote_plus(title)}"
+        )
+    return first_canonical
+
+
+def _rednote_post_id(value: str) -> str:
+    parts = urlsplit(value)
+    if parts.netloc.lower() not in {"rednote.com", "www.rednote.com"}:
+        return ""
+    match = re.fullmatch(
+        r"/(?:search_result|explore)/([^/?#]+)",
+        parts.path.rstrip("/"),
+    )
+    return match.group(1) if match else ""
+
+
+def _has_xsec_token(value: str) -> bool:
+    return any(
+        key == "xsec_token" and val.strip()
+        for key, val in parse_qsl(urlsplit(value).query, keep_blank_values=True)
     )
 
 
