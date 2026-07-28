@@ -396,6 +396,58 @@ def test_actor_start_switches_to_next_token_when_quota_is_exhausted(
     assert fake.requests[1]["headers"]["Authorization"] == "Bearer new-token"
 
 
+def test_actor_start_tries_every_token_across_plan_limit_variants(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(
+        "APIFY_API_TOKENS",
+        "monthly-limit-token,credits-token,available-token",
+    )
+    monkeypatch.setenv("APIFY_API_TOKEN", "")
+    fake = FakeHttp(
+        [
+            FakeResponse(
+                403,
+                {
+                    "error": {
+                        "type": "platform-feature-disabled",
+                        "message": "Monthly usage hard limit exceeded",
+                    }
+                },
+            ),
+            FakeResponse(
+                400,
+                {
+                    "error": {
+                        "type": "account-limit-exceeded",
+                        "message": "Account credits exhausted",
+                    }
+                },
+            ),
+            FakeResponse(201, {"data": {"id": "run-1"}}),
+        ]
+    )
+    client = ApifyClient(
+        http_client=fake,
+        sleeper=lambda _: None,
+        max_retries=0,
+        raw_root=tmp_path / "raw",
+    )
+
+    started = client.start_actor("actor", {})
+
+    assert started["id"] == "run-1"
+    assert client.token_count == 3
+    assert [
+        request["headers"]["Authorization"] for request in fake.requests
+    ] == [
+        "Bearer monthly-limit-token",
+        "Bearer credits-token",
+        "Bearer available-token",
+    ]
+
+
 def test_actor_start_stops_after_all_tokens_reject_quota(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -415,10 +467,37 @@ def test_actor_start_stops_after_all_tokens_reject_quota(
         raw_root=tmp_path / "raw",
     )
 
-    with pytest.raises(apify_module.ApifyError):
+    with pytest.raises(
+        apify_module.ApifyError,
+        match=r"All 2 configured Apify API token\(s\) were rejected",
+    ) as exc_info:
         client.start_actor("actor", {})
 
     assert len(fake.requests) == 2
+    assert "limited-token" not in str(exc_info.value)
+    assert "new-token" not in str(exc_info.value)
+
+
+def test_actor_start_does_not_switch_token_for_unrelated_bad_input(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("APIFY_API_TOKENS", "first-token,second-token")
+    monkeypatch.setenv("APIFY_API_TOKEN", "")
+    fake = FakeHttp(
+        [FakeResponse(400, {"error": {"message": "Invalid Actor input"}})]
+    )
+    client = ApifyClient(
+        http_client=fake,
+        sleeper=lambda _: None,
+        max_retries=0,
+        raw_root=tmp_path / "raw",
+    )
+
+    with pytest.raises(apify_module.ApifyError, match="Invalid Actor input"):
+        client.start_actor("actor", {})
+
+    assert len(fake.requests) == 1
 
 
 def test_dataset_request_does_not_switch_accounts_mid_run(

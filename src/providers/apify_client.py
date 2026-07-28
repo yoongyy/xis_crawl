@@ -314,18 +314,24 @@ class ApifyClient:
                 self.sleeper(2 ** attempt)
                 attempt += 1
                 continue
-            if (
-                _can_switch_token(method, path, response)
-                and self._switch_to_untried_token(tried_tokens | {token})
-            ):
+            token_rejected = _can_switch_token(method, path, response)
+            if token_rejected:
                 tried_tokens.add(token)
-                continue
+                if self._switch_to_untried_token(tried_tokens):
+                    continue
             if response.status_code in {429, 500, 502, 503, 504} and attempt < self.max_retries:
                 self.sleeper(2 ** attempt)
                 attempt += 1
                 continue
             if response.status_code >= 400:
                 message = _redact_message(response.text[:500], self._tokens)
+                if token_rejected and len(tried_tokens) >= len(self._tokens):
+                    raise ApifyError(
+                        "All "
+                        f"{len(self._tokens)} configured Apify API token(s) "
+                        "were rejected while starting the Actor. "
+                        f"Last response ({response.status_code}): {message}"
+                    )
                 raise ApifyError(f"Apify API returned {response.status_code}: {message}")
             try:
                 payload = response.json()
@@ -512,12 +518,22 @@ def _can_switch_token(
         return False
     if response.status_code in {401, 402, 429}:
         return True
-    if response.status_code != 403:
+    if response.status_code < 400 or response.status_code >= 500:
         return False
     message = str(getattr(response, "text", "")).lower()
     return any(
         term in message
         for term in (
+            "account limit",
+            "billing",
+            "credit limit",
+            "credits exhausted",
+            "hard limit",
+            "monthly limit",
+            "monthly usage",
+            "payment required",
+            "plan limit",
+            "platform-feature-disabled",
             "quota",
             "usage limit",
             "spending limit",
