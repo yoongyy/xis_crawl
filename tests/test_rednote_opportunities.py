@@ -59,13 +59,22 @@ def test_analyzes_and_deduplicates_browser_capture(tmp_path: Path) -> None:
     assert report["records_collected"] == 3
     assert report["unique_posts"] == 2
     assert report["new_since_previous_run"] == 2
-    assert report["ceo_decision"] == "RESEARCH MORE"
+    assert report["ceo_decision"] == "VALIDATE NOW"
+    assert report["best_bet"]["opportunity"] == (
+        "Verified part-time work marketplace for Malaysia"
+    )
     assert report["candidates"][0]["opportunity"] == (
         "Verified part-time work marketplace for Malaysia"
     )
     text = _text_report(report)
-    assert text.startswith("Completed. CEO decision: RESEARCH MORE today.")
-    assert "Who would buy" not in text
+    assert text.startswith(
+        "Hey Kenny — today's best bet is: "
+        "Verified part-time work marketplace for Malaysia"
+    )
+    assert "What to sell now:" in text
+    assert "Why they pay:" in text
+    assert "48-hour move:" in text
+    assert "Kill criterion:" in text
     assert "JobStreet, Hiredly, Indeed, Maukerja" in text
     assert text.rstrip().splitlines()[-1].startswith("Next action:")
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -255,6 +256,38 @@ def opportunities_run_command(
             f"[dim]Opportunity email skipped: {notification['reason']}[/dim]"
         )
     _print_result(result, "Candidates", len(result.get("candidates") or []))
+
+
+@opportunities_app.command("email-brief")
+def opportunities_email_brief(
+    input_path: Path = typer.Option(
+        ...,
+        "--input",
+        help="Structured Global or Global-to-Malaysia research brief JSON.",
+    ),
+) -> None:
+    """Send an action-first CEO email from a structured research brief."""
+    result = json.loads(input_path.read_text(encoding="utf-8"))
+    workflow = str(result.get("workflow") or "")
+    state_name = (
+        "global_opportunity_email_state.json"
+        if workflow == "global_opportunity_dig"
+        else "global_to_malaysia_email_state.json"
+    )
+    notification = notify_opportunity_candidates(
+        result,
+        state_path=Path("data/reports") / state_name,
+    )
+    if notification["status"] != "sent":
+        console.print(
+            f"[red]Opportunity email {notification['status']}:[/red] "
+            f"{notification.get('reason') or 'unknown error'}"
+        )
+        raise typer.Exit(code=1)
+    console.print(
+        f"[green]Opportunity CEO brief accepted:[/green] "
+        f"{notification.get('email_id')}"
+    )
 
 
 def register_apify_cli(app: typer.Typer) -> None:

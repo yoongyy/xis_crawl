@@ -128,6 +128,19 @@ CATEGORY_RULES: list[dict[str, Any]] = [
             "to reduce scams, no-shows, and screening time."
         ),
         "alternatives": "JobStreet, Hiredly, Indeed, Maukerja, and Facebook groups.",
+        "offer": (
+            "A concierge-backed marketplace that verifies employers and charges "
+            "RM50 for each successfully filled shift."
+        ),
+        "wedge": (
+            "Fast matching for Chinese-, Malay-, and English-speaking students, with "
+            "employer verification and no-show protection."
+        ),
+        "validation": (
+            "Contact 10 cafes, retailers, and event operators; offer one verified "
+            "part-time hire for RM50."
+        ),
+        "kill": "Kill it if fewer than 3 of 10 employers agree to the RM50 offer.",
     },
     {
         "key": "student_arrival",
@@ -145,6 +158,19 @@ CATEGORY_RULES: list[dict[str, Any]] = [
             "University international offices, education agents, Grab, Touch 'n Go, "
             "and free RedNote guide posts."
         ),
+        "offer": (
+            "A RM99 arrival concierge that completes a student's first-week setup "
+            "checklist through chat and vetted local partners."
+        ),
+        "wedge": (
+            "One multilingual handoff spanning banking, SIM, transport, housing, and "
+            "campus administration instead of disconnected guide posts."
+        ),
+        "validation": (
+            "Offer the RM99 concierge to 10 incoming students and ask two education "
+            "agents to distribute it."
+        ),
+        "kill": "Kill it if fewer than 3 students pay or reserve with a deposit.",
     },
     {
         "key": "vehicle_history",
@@ -159,6 +185,21 @@ CATEGORY_RULES: list[dict[str, Any]] = [
             "requires privileged vehicle and insurance data."
         ),
         "alternatives": "SCRUT, OtoFacts, CarHistory.my, and mechanic inspections.",
+        "offer": (
+            "A RM29 plain-language interpretation and risk checklist layered on top "
+            "of an existing vehicle-history report."
+        ),
+        "wedge": (
+            "Explain claim severity, flood and mileage risk, and the exact questions "
+            "a buyer should ask before paying a deposit."
+        ),
+        "validation": (
+            "Sell 10 manual RM29 report interpretations before building any data product."
+        ),
+        "kill": (
+            "Kill it if buyers will only pay for proprietary data that cannot be "
+            "licensed economically."
+        ),
     },
     {
         "key": "small_business_ops",
@@ -181,6 +222,18 @@ CATEGORY_RULES: list[dict[str, Any]] = [
             "e-invoice mistakes."
         ),
         "alternatives": "AutoCount, SQL Account, Bukku, StoreHub, and spreadsheets.",
+        "offer": (
+            "A RM49/month WhatsApp-first admin assistant for orders, invoices, "
+            "payment reminders, and e-invoice handoff."
+        ),
+        "wedge": (
+            "Start as a service for microbusinesses that find accounting software too "
+            "heavy, then automate only the repeated workflow."
+        ),
+        "validation": (
+            "Recruit five Malaysian microbusinesses for a paid two-week concierge pilot."
+        ),
+        "kill": "Kill it if fewer than 2 of 5 businesses pay RM49 for the pilot.",
     },
     {
         "key": "personal_finance",
@@ -202,6 +255,115 @@ CATEGORY_RULES: list[dict[str, Any]] = [
             "shared household budgets, and measurable savings."
         ),
         "alternatives": "MAE, GXBank, Money Lover, Spendee, YNAB, and spreadsheets.",
+        "offer": (
+            "A RM15/month multilingual expense tracker with Malaysian bank and "
+            "e-wallet categories plus a weekly savings coach."
+        ),
+        "wedge": (
+            "Local transaction language, household sharing, and advice that reflects "
+            "Malaysian banks, e-wallets, and spending patterns."
+        ),
+        "validation": (
+            "Manually onboard 10 users from the evidence into a spreadsheet-backed "
+            "RM15/month savings pilot."
+        ),
+        "kill": "Kill it if fewer than 3 of 10 users pay after a seven-day trial.",
+    },
+    {
+        "key": "rental_housing",
+        "terms": (
+            "租房",
+            "房东",
+            "押金",
+            "中介",
+            "room rental",
+            "rent malaysia",
+            "landlord",
+            "deposit scam",
+        ),
+        "opportunity": "Verified rental handover and deposit protection for Malaysia",
+        "customer": (
+            "Students, young workers, and landlords need proof of property condition, "
+            "clear handover records, and safer deposit handling."
+        ),
+        "why_pay": (
+            "Tenants and landlords may pay to prevent deposit disputes, scams, and "
+            "costly damage arguments."
+        ),
+        "alternatives": "PropertyGuru, iProperty, SPEEDHOME, agents, and WhatsApp records.",
+        "offer": (
+            "A RM79 move-in evidence pack with identity checks, timestamped condition "
+            "photos, meter readings, and a signed handover record."
+        ),
+        "wedge": (
+            "Focus narrowly on dispute prevention after a tenant has already found a room."
+        ),
+        "validation": (
+            "Sell five manual RM79 move-in evidence packs near one university."
+        ),
+        "kill": "Kill it if neither tenants nor landlords will pay before key handover.",
+    },
+    {
+        "key": "home_services",
+        "terms": (
+            "水管",
+            "维修",
+            "清洁",
+            "冷气",
+            "装修",
+            "找师傅",
+            "plumber",
+            "cleaner",
+            "aircon service",
+            "home repair",
+        ),
+        "opportunity": "Fixed-price trusted home-service booking for Malaysia",
+        "customer": (
+            "Households need reliable cleaners and repair technicians without opaque "
+            "pricing, slow replies, or uncertain workmanship."
+        ),
+        "why_pay": (
+            "Customers will pay a booking premium for verified providers, fixed scopes, "
+            "and a service guarantee."
+        ),
+        "alternatives": "Recommend.my, Kaodim alternatives, local Facebook groups, and contractors.",
+        "offer": (
+            "A RM20 booking fee for one fixed-scope service with photo proof and a "
+            "seven-day workmanship guarantee."
+        ),
+        "wedge": "Start with one painful job category and one city instead of a broad marketplace.",
+        "validation": "Manually fulfil 10 paid bookings in one Kuala Lumpur neighbourhood.",
+        "kill": "Kill it if gross margin after provider payout is below RM20 per job.",
+    },
+    {
+        "key": "social_commerce",
+        "terms": (
+            "小红书卖家",
+            "直播卖货",
+            "网店",
+            "订单",
+            "库存",
+            "social commerce",
+            "online seller",
+            "order tracking",
+        ),
+        "opportunity": "WhatsApp order operations for Malaysian social sellers",
+        "customer": (
+            "Small RedNote, TikTok, and Instagram sellers need to turn chats into paid "
+            "orders without losing inventory and follow-ups."
+        ),
+        "why_pay": (
+            "Sellers may pay when the workflow recovers missed orders and removes daily "
+            "manual reconciliation."
+        ),
+        "alternatives": "EasyStore, SiteGiant, Shopify, StoreHub, and spreadsheets.",
+        "offer": (
+            "A RM79/month assisted inbox that records chat orders, confirms payment, "
+            "updates inventory, and reminds unpaid buyers."
+        ),
+        "wedge": "Serve chat-first micro-sellers who are not ready to operate a full storefront.",
+        "validation": "Run the workflow manually for five sellers for two weeks at RM79.",
+        "kill": "Kill it if the pilot does not recover at least RM79 in missed orders per seller.",
     },
 ]
 
@@ -254,7 +416,7 @@ def analyze_rednote_capture(
     elif any(item["decision"] == "BUILD" for item in candidates):
         decision = "BUILD"
     elif candidates:
-        decision = "RESEARCH MORE"
+        decision = "VALIDATE NOW"
     else:
         decision = "NO BUILD"
 
@@ -273,6 +435,7 @@ def analyze_rednote_capture(
         "new_since_previous_run": len(new_urls),
         "collection_cost_usd": 0.0,
         "queries_run": len((capture.get("queries") or {})),
+        "best_bet": candidates[0] if candidates else None,
         "candidates": candidates[:3],
         "next_action": next_action,
     }
@@ -311,7 +474,12 @@ def send_rednote_report(
     subject = (
         "[CariLead RedNote] RESEARCH RUN FAILED - Malaysia"
         if decision == "NOT AVAILABLE"
-        else f"[CariLead RedNote] {decision} - Malaysia opportunity dig"
+        else (
+            f"[CariLead RedNote] TODAY'S BEST BET - "
+            f"{(report.get('best_bet') or {}).get('opportunity')}"
+            if report.get("best_bet")
+            else "[CariLead RedNote] NO BET FOUND - Malaysia"
+        )
     )
     payload = {
         "from": f"CariLead Alerts <{from_email}>",
@@ -400,10 +568,19 @@ def _build_candidates(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 for item in evidence
             }
         )
+        if demand + pain + payment == 0:
+            continue
         build = (
             independent >= 5 and demand >= 3 and pain >= 3 and payment >= 2
         )
-        decision = "BUILD" if build else "RESEARCH MORE"
+        decision = "BUILD" if build else "VALIDATE NOW"
+        confidence = (
+            "STRONG"
+            if build
+            else "PROMISING"
+            if independent >= 3 and demand + pain >= 3
+            else "EARLY"
+        )
         if build:
             reason = (
                 f"{independent} independent RedNote posts include {demand} explicit "
@@ -423,8 +600,13 @@ def _build_candidates(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "customer_problem": rule["customer"],
                 "why_pay": rule["why_pay"],
                 "competitors": rule["alternatives"],
+                "offer": rule["offer"],
+                "wedge": rule["wedge"],
+                "validation_test": rule["validation"],
+                "kill_criterion": rule["kill"],
                 "decision_reason": reason,
                 "decision": decision,
+                "confidence": confidence,
                 "evidence_records": len(evidence),
                 "independent_authors": independent,
                 "payment_signals": payment,
@@ -442,10 +624,16 @@ def _text_report(report: dict[str, Any]) -> str:
             "Research run failed. CEO decision: NOT AVAILABLE. "
             "No market conclusion was made from an empty collection."
         )
+    elif report.get("best_bet"):
+        opening = (
+            "Hey Kenny — today's best bet is: "
+            f"{report['best_bet']['opportunity']}."
+        )
     else:
-        opening = f"Completed. CEO decision: {decision} today."
+        opening = "Hey Kenny — no concrete bet survived this collection."
     lines = [
         opening,
+        f"CEO move: {decision}.",
         "",
         f"{report.get('records_collected', 0)} RedNote cards collected.",
         f"{report.get('unique_posts', 0)} unique posts.",
@@ -454,16 +642,27 @@ def _text_report(report: dict[str, Any]) -> str:
     ]
     if report.get("collection_error"):
         lines.extend(["", f"Collection failure: {report['collection_error']}"])
-    for candidate in report.get("candidates") or []:
+    candidates = list(report.get("candidates") or [])
+    for index, candidate in enumerate(candidates, start=1):
         lines.extend(
             [
                 "",
-                str(candidate["opportunity"]),
-                str(candidate["customer_problem"]),
-                f"Why customers may pay: {candidate['why_pay']}",
-                f"Competitors and alternatives: {candidate['competitors']}",
-                str(candidate["decision_reason"]),
-                f"Decision: {candidate['decision']}.",
+                (
+                    "TODAY'S BET"
+                    if index == 1
+                    else f"BACKUP BET {index - 1}"
+                )
+                + f": {candidate['opportunity']}",
+                f"Buyer and pain: {candidate['customer_problem']}",
+                f"What to sell now: {candidate['offer']}",
+                f"Why they pay: {candidate['why_pay']}",
+                f"Competitors: {candidate['competitors']}",
+                f"Our wedge: {candidate['wedge']}",
+                f"Evidence quality: {candidate['confidence']}. "
+                f"{candidate['decision_reason']}",
+                f"CEO decision: {candidate['decision']}.",
+                f"48-hour move: {candidate['validation_test']}",
+                f"Kill criterion: {candidate['kill_criterion']}",
             ]
         )
         for source in candidate.get("sources") or []:
@@ -508,17 +707,9 @@ def _next_action(
             "do not make a product decision from this failed collection."
         )
     if decision == "BUILD":
-        top = candidates[0]["opportunity"]
-        return (
-            f"Next action: interview five Malaysian target users about “{top}” and "
-            "test one paid offer within seven days."
-        )
-    if decision == "RESEARCH MORE":
-        top = candidates[0]["opportunity"]
-        return (
-            f"Next action: collect 10 more independent Malaysia posts about “{top}”, "
-            "verify three competitor prices, then rerun the decision."
-        )
+        return f"Next action: {candidates[0]['validation_test']}"
+    if decision == "VALIDATE NOW":
+        return f"Next action: {candidates[0]['validation_test']}"
     return (
         "Next action: do not build from this batch; broaden the Malaysia pain and "
         "alternative searches before the next run."

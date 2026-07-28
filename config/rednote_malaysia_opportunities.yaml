@@ -3,21 +3,53 @@ source: RedNote
 timezone: Asia/Kuala_Lumpur
 schedule_interval_hours: 4
 max_queries_per_run: 8
+rotate_queries: true
+rotation_windows: 6
 max_visible_cards_per_query: 10
 max_detail_opens_per_run: 12
 queries:
-  - 马来西亚 求推荐
-  - 马来西亚 找不到 app
-  - 马来西亚 太贵 替代
-  - 马来西亚 很麻烦 怎么办
-  - 马来西亚 留学生 困扰
-  - 马来西亚 小生意 痛点
-  - Malaysia recommend app
-  - Malaysia alternative too expensive
+  - "马来西亚 愿意付费 app"
+  - "马来西亚 预算 求推荐"
+  - "马来西亚 太贵 替代"
+  - "马来西亚 每周 手动"
+  - "马来西亚 Excel 管理 麻烦"
+  - "马来西亚 找不到 工具"
+  - "马来西亚 兼职 被骗"
+  - "马来西亚 租房 押金 纠纷"
+  - "马来西亚 找维修 师傅"
+  - "马来西亚 冷气维修 太贵"
+  - "马来西亚 记账 app 不好用"
+  - "马来西亚 小商家 订单 管理"
+  - "马来西亚 e invoice 麻烦"
+  - "马来西亚 网店 库存 麻烦"
+  - "马来西亚 留学生 刚到 困扰"
+  - "马来西亚 二手车 怕被骗"
+  - "马来西亚 排队 预约 麻烦"
+  - "马来西亚 托儿 求推荐"
+  - "马来西亚 宠物服务 求推荐"
+  - "马来西亚 送货 太贵 替代"
+  - "Malaysia willing to pay for app"
+  - "Malaysia manual workflow every week"
+  - "Malaysia spreadsheet pain small business"
+  - "Malaysia alternative too expensive"
+  - "Malaysia part time job scam"
+  - "Malaysia rental deposit dispute"
+  - "Malaysia trusted home service"
+  - "Malaysia expense tracker local banks"
+  - "Malaysia e invoice micro business pain"
+  - "Malaysia social seller order tracking"
+  - "Malaysia used car report problem"
+  - "Malaysia international student setup"
+  - "Malaysia appointment booking pain"
+  - "Malaysia childcare recommendation"
+  - "Malaysia pet service recommendation"
+  - "Malaysia delivery alternative expensive"
 rules:
   - Read public, visible content only.
   - Never post, comment, like, follow, message, or access hidden profile data.
   - Stop on CAPTCHA, risk-control, or authentication failure.
   - Save a collection failure and send it as a failed run, never as a market decision.
+  - Rotate eight high-intent searches per run instead of repeating the same search set.
   - Deduplicate canonical post URLs before analysis.
-  - Send a CEO narrative email after every run.
+  - On a successful collection, nominate one concrete paid validation as today's best bet.
+  - Send a CEO action email after every run.

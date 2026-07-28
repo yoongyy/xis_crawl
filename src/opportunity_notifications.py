@@ -56,10 +56,8 @@ def notify_opportunity_candidates(
     state_path: Path = DEFAULT_STATE_PATH,
     post: Callable[..., Any] | None = None,
 ) -> dict[str, Any]:
-    """Email newly changed opportunity candidates without failing the research run."""
+    """Email an action-oriented CEO brief after every opportunity run."""
     candidates = list(result.get("candidates") or [])
-    if not candidates:
-        return {"status": "skipped", "reason": "no opportunity candidates"}
 
     load_dotenv()
     api_key = os.getenv("RESEND_API_KEY", "").strip()
@@ -80,13 +78,18 @@ def notify_opportunity_candidates(
             "reason": f"missing email configuration: {', '.join(missing)}",
         }
 
-    fingerprint = _candidate_fingerprint(candidates)
-    previous = _read_state(state_path)
-    if previous.get("fingerprint") == fingerprint:
-        return {"status": "skipped", "reason": "opportunity candidates are unchanged"}
-
     decision = _overall_decision(result, candidates)
-    subject = f"[CariLead] {decision} - Global to Malaysia"
+    narratives = _actionable_narratives(candidates)
+    workflow_name = _workflow_name(result)
+    fingerprint = _candidate_fingerprint(candidates)
+    if decision == "NOT AVAILABLE":
+        subject = f"[CariLead] RESEARCH RUN FAILED - {workflow_name}"
+    elif narratives:
+        subject = (
+            f"[CariLead] TODAY'S BEST BET - {narratives[0]['opportunity']}"
+        )
+    else:
+        subject = f"[CariLead] NO BET FOUND - {workflow_name}"
     payload = {
         "from": f"CariLead Alerts <{from_email}>",
         "to": [to_email],
@@ -162,9 +165,9 @@ def _read_state(state_path: Path) -> dict[str, Any]:
 
 def _html_email(result: dict[str, Any], candidates: list[dict[str, Any]]) -> str:
     decision = _overall_decision(result, candidates)
-    sections = []
-    for index, candidate in enumerate(candidates[:3], start=1):
-        narrative = _candidate_narrative(candidate)
+    narratives = _actionable_narratives(candidates)
+    sections: list[str] = []
+    for index, narrative in enumerate(narratives[:3], start=1):
         links = "".join(
             f'<li><a href="{html.escape(item["url"], quote=True)}">'
             f'{html.escape(item["label"])}</a></li>'
@@ -173,22 +176,32 @@ def _html_email(result: dict[str, Any], candidates: list[dict[str, Any]]) -> str
         sections.append(
             """
             <section style="margin:24px 0">
-              <h2 style="font-size:18px;margin:0 0 12px;color:#0f172a">{index}. {opportunity}</h2>
-              <p><strong>Problem:</strong> {problem}</p>
-              <p><strong>Evidence:</strong> {evidence}</p>
-              <p><strong>Existing alternatives:</strong> {alternatives}</p>
-              <p><strong>Why we win or reject:</strong> {reason}</p>
-              <p><strong>Decision:</strong> {decision}</p>
+              <h2 style="font-size:18px;margin:0 0 12px;color:#0f172a">{label}: {opportunity}</h2>
+              <p><strong>Buyer and pain:</strong> {problem}</p>
+              <p><strong>What to sell now:</strong> {offer}</p>
+              <p><strong>Why they pay:</strong> {why_pay}</p>
+              <p><strong>Competitors:</strong> {alternatives}</p>
+              <p><strong>Our wedge:</strong> {wedge}</p>
+              <p><strong>Evidence quality:</strong> {confidence}. {evidence} {reason}</p>
+              <p><strong>CEO decision:</strong> {decision}</p>
+              <p><strong>48-hour move:</strong> {validation}</p>
+              <p><strong>Kill criterion:</strong> {kill}</p>
               {links_section}
             </section>
             """.format(
-                index=index,
+                label="TODAY'S BET" if index == 1 else f"BACKUP BET {index - 1}",
                 opportunity=html.escape(narrative["opportunity"]),
                 problem=html.escape(narrative["problem"]),
+                offer=html.escape(narrative["offer"]),
+                why_pay=html.escape(narrative["why_pay"]),
                 evidence=html.escape(narrative["evidence"]),
                 alternatives=html.escape(narrative["alternatives"]),
+                wedge=html.escape(narrative["wedge"]),
+                confidence=html.escape(narrative["confidence"]),
                 reason=html.escape(narrative["reason"]),
                 decision=html.escape(narrative["decision"]),
+                validation=html.escape(narrative["validation_test"]),
+                kill=html.escape(narrative["kill_criterion"]),
                 links_section=(
                     f"<p><strong>Evidence links:</strong></p><ul>{links}</ul>"
                     if links
@@ -200,11 +213,22 @@ def _html_email(result: dict[str, Any], candidates: list[dict[str, Any]]) -> str
         f"<li>{html.escape(line)}</li>" for line in _collection_summary(result)
     )
     next_action = html.escape(_next_action(result, decision))
+    if decision == "NOT AVAILABLE":
+        headline = (
+            "Research run failed. No CEO market decision was made from an empty collection."
+        )
+    elif narratives:
+        headline = (
+            f"Hey Kenny — today's best bet is: {narratives[0]['opportunity']}."
+        )
+    else:
+        headline = "Hey Kenny — no concrete bet survived this collection."
     return f"""
     <div style="font-family:Arial,sans-serif;max-width:680px;margin:auto;color:#334155">
       <p style="font-size:20px;color:#0f172a">
-        <strong>Completed. CEO decision: {html.escape(decision)} today.</strong>
+        <strong>{html.escape(headline)}</strong>
       </p>
+      <p><strong>CEO move:</strong> {html.escape(decision)}</p>
       <ul>{summary}</ul>
       {''.join(sections)}
       <p style="font-size:17px;color:#0f172a"><strong>{next_action}</strong></p>
@@ -218,22 +242,44 @@ def _html_email(result: dict[str, Any], candidates: list[dict[str, Any]]) -> str
 
 def _text_email(result: dict[str, Any], candidates: list[dict[str, Any]]) -> str:
     decision = _overall_decision(result, candidates)
+    narratives = _actionable_narratives(candidates)
+    if decision == "NOT AVAILABLE":
+        opening = (
+            "Research run failed. No CEO market decision was made from an empty collection."
+        )
+    elif narratives:
+        opening = (
+            "Hey Kenny — today's best bet is: "
+            f"{narratives[0]['opportunity']}."
+        )
+    else:
+        opening = "Hey Kenny — no concrete bet survived this collection."
     lines = [
-        f"Completed. CEO decision: {decision} today.",
+        opening,
+        f"CEO move: {decision}.",
         "",
         *_collection_summary(result),
         "",
     ]
-    for index, candidate in enumerate(candidates[:3], start=1):
-        narrative = _candidate_narrative(candidate)
+    for index, narrative in enumerate(narratives[:3], start=1):
         lines.extend(
             [
-                f"{index}. {narrative['opportunity']}",
-                f"Problem: {narrative['problem']}",
-                f"Evidence: {narrative['evidence']}",
-                f"Existing alternatives: {narrative['alternatives']}",
-                f"Why we win or reject: {narrative['reason']}",
-                f"Decision: {narrative['decision']}",
+                (
+                    "TODAY'S BET"
+                    if index == 1
+                    else f"BACKUP BET {index - 1}"
+                )
+                + f": {narrative['opportunity']}",
+                f"Buyer and pain: {narrative['problem']}",
+                f"What to sell now: {narrative['offer']}",
+                f"Why they pay: {narrative['why_pay']}",
+                f"Competitors: {narrative['alternatives']}",
+                f"Our wedge: {narrative['wedge']}",
+                f"Evidence quality: {narrative['confidence']}. "
+                f"{narrative['evidence']} {narrative['reason']}",
+                f"CEO decision: {narrative['decision']}",
+                f"48-hour move: {narrative['validation_test']}",
+                f"Kill criterion: {narrative['kill_criterion']}",
             ]
         )
         lines.extend(
@@ -255,17 +301,18 @@ def _overall_decision(
     result: dict[str, Any],
     candidates: list[dict[str, Any]],
 ) -> str:
+    if _collection_failed(result):
+        return "NOT AVAILABLE"
     explicit = _normalize_decision(result.get("ceo_decision"))
     if explicit:
         return explicit
-    decisions = {
-        _candidate_narrative(candidate)["decision"] for candidate in candidates[:3]
-    }
+    narratives = _actionable_narratives(candidates)
+    decisions = {item["decision"] for item in narratives}
     if "BUILD" in decisions:
         return "BUILD"
-    if decisions & {"RESEARCH MORE", "WATCH"}:
-        return "RESEARCH MORE"
-    return "NO BUILD"
+    if narratives:
+        return "VALIDATE NOW"
+    return "NO BET"
 
 
 def _candidate_narrative(candidate: dict[str, Any]) -> dict[str, Any]:
@@ -285,50 +332,103 @@ def _candidate_narrative(candidate: dict[str, Any]) -> dict[str, Any]:
     )
     abstract = _is_abstract_candidate(raw_name) and not explicit_opportunity
     if abstract:
-        opportunity = "No concrete opportunity identified from this cluster"
-        problem = (
-            f'The records were grouped under the broad discovery query “{raw_name}”, '
-            "not one specific customer problem."
+        return {
+            "actionable": False,
+            "opportunity": "No concrete opportunity identified",
+            "problem": (
+                "The source grouping does not describe one specific customer problem."
+            ),
+            "offer": "",
+            "why_pay": "",
+            "evidence": _evidence_summary(candidate),
+            "alternatives": "",
+            "wedge": "",
+            "reason": (
+                "The result does not state what to sell, who would buy it, or why "
+                "they would pay."
+            ),
+            "decision": "REJECT",
+            "confidence": "REJECTED",
+            "validation_test": "",
+            "kill_criterion": "",
+            "sources": _source_links(candidate),
+        }
+    opportunity = explicit_opportunity or raw_name
+    problem = _first_text(
+        candidate,
+        "problem",
+        "problem_summary",
+        "customer_problem",
+    ) or (
+        f"Users are discussing {raw_name}, but the exact customer job still "
+        "requires validation."
+    )
+    alternatives = _display_value(
+        candidate.get("existing_alternatives")
+        or candidate.get("competitors")
+        or (candidate.get("evaluation_dimensions") or {}).get(
+            "malaysia_competitors"
         )
-        alternatives = "Not evaluated because the cluster is not a real product category."
-        reason = (
-            "The result does not state what to build, who would buy it, or why they "
-            "would pay. It must not be presented as an opportunity."
-        )
-        decision = "REJECT"
-    else:
-        opportunity = explicit_opportunity or raw_name
-        problem = _first_text(
-            candidate,
-            "problem",
-            "problem_summary",
-            "customer_problem",
-        ) or (
-            f"Users are discussing {raw_name}, but the exact customer job still "
-            "requires validation."
-        )
-        alternatives = _display_value(
-            candidate.get("existing_alternatives")
-            or candidate.get("competitors")
-            or (candidate.get("evaluation_dimensions") or {}).get(
-                "malaysia_competitors"
-            )
-        ) or "Not established by the collected evidence."
-        reason = _first_text(
-            candidate,
-            "decision_reason",
-            "why_we_win_or_reject",
-            "wedge",
-            "rationale",
-        ) or "No defensible wedge has been established."
-        decision = _candidate_decision(candidate)
+    ) or "Not established by the collected evidence."
+    reason = _first_text(
+        candidate,
+        "decision_reason",
+        "why_we_win_or_reject",
+        "wedge",
+        "rationale",
+    ) or "No defensible wedge has been established."
+    decision = _candidate_decision(candidate)
+    offer = _first_text(
+        candidate,
+        "offer",
+        "what_to_sell",
+        "what_to_build",
+        "smallest_paid_test",
+    ) or f"A manually delivered paid pilot for {opportunity}."
+    why_pay = _first_text(
+        candidate,
+        "why_pay",
+        "why_they_pay",
+        "willingness_to_pay",
+    ) or (
+        "They pay only if this removes a measurable cost, delay, risk, or "
+        "revenue leak identified in the evidence."
+    )
+    wedge = _first_text(
+        candidate,
+        "wedge",
+        "competitive_wedge",
+        "why_we_win",
+    ) or reason
+    validation_test = _first_text(
+        candidate,
+        "validation_test",
+        "next_action",
+        "forty_eight_hour_move",
+    ) or (
+        f"Ask 10 target buyers to pay for a manually delivered {opportunity} "
+        "pilot before building software."
+    )
+    kill_criterion = _first_text(
+        candidate,
+        "kill_criterion",
+        "rejection_threshold",
+    ) or "Kill it if fewer than 3 of 10 target buyers commit money."
+    confidence = _first_text(candidate, "confidence") or _confidence(candidate)
     return {
+        "actionable": not abstract,
         "opportunity": opportunity,
         "problem": problem,
+        "offer": offer,
+        "why_pay": why_pay,
         "evidence": _evidence_summary(candidate),
         "alternatives": alternatives,
+        "wedge": wedge,
         "reason": reason,
         "decision": decision,
+        "confidence": confidence,
+        "validation_test": validation_test,
+        "kill_criterion": kill_criterion,
         "sources": _source_links(candidate),
     }
 
@@ -342,14 +442,14 @@ def _candidate_decision(candidate: dict[str, Any]) -> str:
     if classification == "REJECT":
         return "REJECT"
     if status in {"NOT_RESEARCHED", "INSUFFICIENT_EVIDENCE"}:
-        return "RESEARCH MORE"
+        return "VALIDATE NOW"
     if classification in {
         "MALAYSIA_FIRST",
         "SEA_COUNTRY_SPECIFIC",
         "GLOBAL_ENGLISH",
     }:
-        return "RESEARCH MORE"
-    return "WATCH"
+        return "VALIDATE NOW"
+    return "VALIDATE NOW"
 
 
 def _normalize_decision(value: Any) -> str | None:
@@ -360,6 +460,8 @@ def _normalize_decision(value: Any) -> str | None:
         "RESEARCH": "RESEARCH MORE",
         "RESEARCH MORE": "RESEARCH MORE",
         "CONTINUE RESEARCH": "RESEARCH MORE",
+        "VALIDATE": "VALIDATE NOW",
+        "VALIDATE NOW": "VALIDATE NOW",
         "WATCH": "WATCH",
         "REJECT": "REJECT",
     }
@@ -419,11 +521,58 @@ def _next_action(result: dict[str, Any], decision: str) -> str:
     explicit = str(result.get("next_action") or "").strip()
     if explicit:
         return explicit
-    if decision == "BUILD":
-        return "Therefore: define the smallest paid validation before building."
-    if decision == "RESEARCH MORE":
-        return "Therefore: continue validation; no landing page, MVP, or marketing yet."
-    return "Therefore: no landing page, MVP, or marketing."
+    if decision == "NOT AVAILABLE":
+        return (
+            "Next action: restore collection and rerun; do not invent a market "
+            "decision from an empty research run."
+        )
+    narratives = _actionable_narratives(list(result.get("candidates") or []))
+    if narratives:
+        return f"Next action: {narratives[0]['validation_test']}"
+    return (
+        "Next action: expand product-specific pain searches and nominate one "
+        "manually deliverable paid test on the next successful run."
+    )
+
+
+def _actionable_narratives(
+    candidates: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    return [
+        narrative
+        for candidate in candidates
+        if (narrative := _candidate_narrative(candidate))["actionable"]
+    ]
+
+
+def _confidence(candidate: dict[str, Any]) -> str:
+    authors = int(candidate.get("independent_authors") or 0)
+    payment = int(candidate.get("payment_or_usage_signals") or 0)
+    if authors >= 5 and payment >= 2:
+        return "STRONG"
+    if authors >= 3 and payment >= 1:
+        return "PROMISING"
+    return "EARLY"
+
+
+def _collection_failed(result: dict[str, Any]) -> bool:
+    if result.get("collection_error"):
+        return True
+    stage_a = result.get("stage_a") or {}
+    stage_c = result.get("stage_c") or {}
+    records = int(stage_a.get("records") or 0) + int(stage_c.get("records") or 0)
+    return (
+        str(result.get("research_status") or "").upper() == "NOT_RESEARCHED"
+        and records == 0
+    )
+
+
+def _workflow_name(result: dict[str, Any]) -> str:
+    workflow = str(result.get("workflow") or "").lower()
+    mode = str(result.get("mode") or "").lower()
+    if workflow == "global_opportunity_dig" or mode == "global":
+        return "Global Opportunity"
+    return "Global to Malaysia"
 
 
 def _is_abstract_candidate(value: str) -> bool:
