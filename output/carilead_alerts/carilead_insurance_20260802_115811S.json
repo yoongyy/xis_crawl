@@ -1,0 +1,55 @@
+[
+  {
+    "lead_id": "lead-ins-001",
+    "niche": "insurance",
+    "title": "想给宝宝买一份全套医药卡和人寿保单，人在吉隆坡KL，求推荐客观看法！",
+    "content": "刚生了宝宝，打算帮他规划一份医药卡和储蓄险。看网上好多公司都不懂怎么选。大家有靠谱的吉隆坡保险理财师推荐吗？不要硬销的！",
+    "author_name": "吉隆坡新手辣妈",
+    "author_id": null,
+    "url": "https://www.xiaohongshu.com/explore/lead-ins-001",
+    "location_tag": "吉隆坡",
+    "published_at": "2026-08-02T11:58:11.599383",
+    "extracted_at": "2026-08-02T11:58:11.599801",
+    "intent_score": 11,
+    "matched_keywords": [
+      "储蓄险",
+      "吉隆坡保险"
+    ],
+    "suggested_reply": "你好！看到你在了解保单方案。我是大马持牌理财顾问，可以根据你的预算帮你做一份免费的客观保单对比（包含医疗保障和重疾覆盖），不强制推销，方便私信聊聊你的具体需求吗？",
+    "is_high_intent": true
+  },
+  {
+    "lead_id": "lead-ins-002",
+    "niche": "insurance",
+    "title": "大马重疾险求推荐！30岁IT程序员，预算RM300/月",
+    "content": "工作常加班想给身体加个保障。主要看重癌症和严重疾病赔付，求问保诚/ AIA/ Great Eastern哪家赔付比较快？有专业的agent可以私信我介绍下吗？",
+    "author_name": "PJ打工人Jack",
+    "author_id": null,
+    "url": "https://www.xiaohongshu.com/explore/lead-ins-002",
+    "location_tag": "大马",
+    "published_at": "2026-08-02T11:58:11.599861",
+    "extracted_at": "2026-08-02T11:58:11.599868",
+    "intent_score": 7,
+    "matched_keywords": [],
+    "suggested_reply": "你好！看到你在了解保单方案。我是大马持牌理财顾问，可以根据你的预算帮你做一份免费的客观保单对比（包含医疗保障和重疾覆盖），不强制推销，方便私信聊聊你的具体需求吗？",
+    "is_high_intent": true
+  },
+  {
+    "lead_id": "lead-ins-003",
+    "niche": "insurance",
+    "title": "雪兰莪求推荐医药卡！现在保费涨好多，想换一份性价比高一点的",
+    "content": "原本那份保单每年都涨价有点招架不住。想看看有没有免通胀或者涨幅比较合理的医药卡推荐。人常在Selangor/Subang。",
+    "author_name": "Subang吃货小陈",
+    "author_id": null,
+    "url": "https://www.xiaohongshu.com/explore/lead-ins-003",
+    "location_tag": "雪兰莪",
+    "published_at": "2026-08-02T11:58:11.599891",
+    "extracted_at": "2026-08-02T11:58:11.599894",
+    "intent_score": 6,
+    "matched_keywords": [
+      "医药卡推荐"
+    ],
+    "suggested_reply": "你好！看到你在了解保单方案。我是大马持牌理财顾问，可以根据你的预算帮你做一份免费的客观保单对比（包含医疗保障和重疾覆盖），不强制推销，方便私信聊聊你的具体需求吗？",
+    "is_high_intent": true
+  }
+]

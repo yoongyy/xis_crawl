@@ -1,0 +1,87 @@
+[
+  {
+    "post_id": "mrr-demo-102",
+    "title": "独立开发者美金上榜：跑通第一个$1000 MRR全过程",
+    "content": "不用融资，一人团队如何做到月营收5万/月？核心是选对小众Niche。产品上线第二个月，订阅数突破200个，MRR达到$1,200。记录我的独立开发复盘...",
+    "author_name": "IndieHacker_Jack",
+    "author_id": null,
+    "url": "https://www.xiaohongshu.com/discovery/item/demo102",
+    "likes": 612,
+    "collects": 940,
+    "comments": 88,
+    "engagement_score": 4132,
+    "query": "独立开发 MRR",
+    "published_at": "2026-08-02T11:26:41.138921",
+    "extracted_at": "2026-08-02T11:26:41.138925",
+    "is_mrr_candidate": true,
+    "revenue_score": 13,
+    "matched_keywords": [
+      "$",
+      "MRR",
+      "万/月",
+      "美金",
+      "订阅"
+    ],
+    "revenue_snippets": [
+      "独立开发者美金上榜：跑通第一个$1000 MRR全过程",
+      "不用融资，一人团队如何做到月营收5万/月",
+      "产品上线第二个月，订阅数突破200个，MRR达到$1,200"
+    ]
+  },
+  {
+    "post_id": "mrr-demo-101",
+    "title": "一人公司第6个月：独立开发SaaS月收入突破$3,500 MRR经验分享",
+    "content": "做独立产品6个月了，今天MRR终于突破$3,500美元！主要靠订阅制。刚开始只有零星用户，后来做了海外SEO和ProductHunt发版。分享3点独立开发者做出海SaaS的避坑指南...",
+    "author_name": "搞钱研究所_Leo",
+    "author_id": null,
+    "url": "https://www.xiaohongshu.com/discovery/item/demo101",
+    "likes": 842,
+    "collects": 1230,
+    "comments": 195,
+    "engagement_score": 5569,
+    "query": "独立开发 MRR",
+    "published_at": "2026-08-02T11:26:41.138335",
+    "extracted_at": "2026-08-02T11:26:41.138908",
+    "is_mrr_candidate": true,
+    "revenue_score": 10,
+    "matched_keywords": [
+      "$",
+      "MRR",
+      "美元",
+      "订阅"
+    ],
+    "revenue_snippets": [
+      "一人公司第6个月：独立开发SaaS月收入突破$3,500 MRR经验分享",
+      "做独立产品6个月了，今天MRR终于突破$3,500美元",
+      "主要靠订阅制"
+    ]
+  },
+  {
+    "post_id": "mrr-demo-103",
+    "title": "出海盈利实录：写给想赚美元的独立产品开发者",
+    "content": "分享一个适合单兵作战的Micro-SaaS方向。我的工具软件定位于海外市场，采用年订阅+月订阅模式。目前ARR达到$45,000美元。主要流量来自Twitter和XHS...",
+    "author_name": "全栈出海指南",
+    "author_id": null,
+    "url": "https://www.xiaohongshu.com/discovery/item/demo103",
+    "likes": 420,
+    "collects": 610,
+    "comments": 64,
+    "engagement_score": 2734,
+    "query": "独立开发 MRR",
+    "published_at": "2026-08-02T11:26:41.138927",
+    "extracted_at": "2026-08-02T11:26:41.138930",
+    "is_mrr_candidate": true,
+    "revenue_score": 8,
+    "matched_keywords": [
+      "$",
+      "ARR",
+      "美元",
+      "订阅"
+    ],
+    "revenue_snippets": [
+      "出海盈利实录：写给想赚美元的独立产品开发者",
+      "我的工具软件定位于海外市场，采用年订阅+月订阅模式",
+      "目前ARR达到$45,000美元"
+    ]
+  }
+]

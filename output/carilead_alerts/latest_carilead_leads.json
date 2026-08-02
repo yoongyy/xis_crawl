@@ -1,0 +1,36 @@
+[
+  {
+    "lead_id": "lead-dev-001",
+    "niche": "freelance_dev",
+    "title": "寻找独立开发者外包！做一款餐饮预约微信小程序/网站",
+    "content": "在吉隆坡开餐厅，需要做个简单的顾客预订和菜单浏览小程序。预算符合市场价，寻找做过类似案例的程序员朋友合作，能签合同的来！",
+    "author_name": "KL老咖店主",
+    "author_id": null,
+    "url": "https://www.xiaohongshu.com/explore/lead-dev-001",
+    "location_tag": "吉隆坡",
+    "published_at": "2026-08-02T11:58:14.420717",
+    "extracted_at": "2026-08-02T11:58:14.420763",
+    "intent_score": 5,
+    "matched_keywords": [],
+    "suggested_reply": "你好！我是独立全栈开发者，精通Web/小程序/APP开发。看到你在寻找开发资源，我们可以快速做个15分钟沟通，为你定制高性价比 MVP 方案，欢迎私信了解案例和报价！",
+    "is_high_intent": true
+  },
+  {
+    "lead_id": "lead-dev-002",
+    "niche": "freelance_dev",
+    "title": "求推荐网页制作！需要搭建一个出海SaaS产品的 Landing Page",
+    "content": "团队做了一款AI工具，需要做极简响应式网页设计与开发，包含Stripe支付集成。求推荐靠谱的全栈独立开发者或者小工作室！",
+    "author_name": "出海创业老王",
+    "author_id": null,
+    "url": "https://www.xiaohongshu.com/explore/lead-dev-002",
+    "location_tag": "Malaysia",
+    "published_at": "2026-08-02T11:58:14.420800",
+    "extracted_at": "2026-08-02T11:58:14.420803",
+    "intent_score": 5,
+    "matched_keywords": [
+      "求推荐网页"
+    ],
+    "suggested_reply": "你好！我是独立全栈开发者，精通Web/小程序/APP开发。看到你在寻找开发资源，我们可以快速做个15分钟沟通，为你定制高性价比 MVP 方案，欢迎私信了解案例和报价！",
+    "is_high_intent": true
+  }
+]
